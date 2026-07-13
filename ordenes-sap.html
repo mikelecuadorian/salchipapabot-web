@@ -1,0 +1,310 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Dashboard Órdenes SAP · Consorcio ART</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: 'Inter', sans-serif;
+    background: #0a0e1a;
+    color: #e0e6f0;
+    padding: 24px;
+    min-height: 100vh;
+  }
+  .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; flex-wrap: wrap; gap: 12px; }
+  .header h1 {
+    font-size: 26px; font-weight: 800;
+    background: linear-gradient(135deg, #60a5fa, #a78bfa);
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+  }
+  .header .subtitle { color: #94a3b8; font-size: 14px; }
+  .header .nav-links { display: flex; gap: 12px; font-size: 13px; }
+  .header .nav-links a { color: #64748b; text-decoration: none; padding: 4px 12px; border-radius: 6px; border: 1px solid #1e293b; transition: .2s; }
+  .header .nav-links a:hover { color: #e0e6f0; border-color: #475569; background: #1a1f35; }
+  .header .nav-links a.active { color: #60a5fa; border-color: #60a5fa; }
+  .filters {
+    display: flex; align-items: center; gap: 14px; flex-wrap: wrap;
+    background: #111827; border: 1px solid #1e293b; border-radius: 12px; padding: 12px 18px;
+    margin-bottom: 20px;
+  }
+  .filters label { font-size: 12px; font-weight: 600; color: #94a3b8; text-transform: uppercase; letter-spacing: .05em; }
+  .filters select {
+    background: #1a1f35; color: #e0e6f0; border: 1px solid #2a2a3a; border-radius: 8px;
+    padding: 6px 12px; font-size: 13px; font-family: 'Inter', sans-serif;
+    cursor: pointer; outline: none;
+  }
+  .filters select:hover { border-color: #60a5fa; }
+  .filters select:focus { border-color: #60a5fa; }
+  .filters .period-label { font-size: 12px; color: #64748b; margin-left: 4px; }
+  .kpi-grid {
+    display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 16px; margin-bottom: 20px;
+  }
+  .kpi-card {
+    background: linear-gradient(145deg, #111827, #1a1f35);
+    border: 1px solid #1e293b; border-radius: 16px; padding: 20px;
+    transition: transform .2s, box-shadow .2s;
+    position: relative; overflow: hidden;
+  }
+  .kpi-card::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px; background: var(--accent); }
+  .kpi-card:hover { transform: translateY(-2px); box-shadow: 0 8px 25px rgba(96,165,250,.1); }
+  .kpi-card .label { font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: .06em; color: #64748b; margin-bottom: 6px; }
+  .kpi-card .value { font-size: 32px; font-weight: 800; line-height: 1.2; color: var(--accent); }
+  .kpi-card .sub { font-size: 12px; color: #94a3b8; margin-top: 4px; }
+  .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 16px; }
+  .grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px; margin-bottom: 16px; }
+  .card { background: #111827; border: 1px solid #1e293b; border-radius: 14px; padding: 20px; }
+  .card h2 { font-size: 15px; font-weight: 700; color: #94a3b8; margin-bottom: 16px; text-transform: uppercase; letter-spacing: .04em; }
+  .card canvas { max-height: 280px; max-width: 100%; }
+  .stat-table { width: 100%; border-collapse: collapse; }
+  .stat-table th { text-align: left; font-size: 11px; font-weight: 600; color: #475569; text-transform: uppercase; padding: 6px 8px; border-bottom: 1px solid #1e293b; }
+  .stat-table td { font-size: 13px; padding: 6px 8px; border-bottom: 1px solid #1a1f35; color: #cbd5e1; }
+  .stat-table tr:last-child td { border-bottom: none; }
+  .stat-table .num { text-align: right; font-weight: 600; color: #e0e6f0; }
+  .bar-bg { height: 4px; background: #1e293b; border-radius: 4px; margin-top: 4px; overflow: hidden; }
+  .bar-fill { height: 100%; border-radius: 4px; transition: width .6s ease; }
+  .badge { display: inline-block; padding: 2px 10px; border-radius: 20px; font-size: 11px; font-weight: 700; text-transform: uppercase; }
+  .badge-ok { background: rgba(52,211,153,.15); color: #34d399; }
+  .badge-warn { background: rgba(251,191,36,.15); color: #fbbf24; }
+  .badge-pending { background: rgba(96,165,250,.15); color: #60a5fa; }
+  .footer { text-align: center; color: #475569; font-size: 12px; margin-top: 24px; padding-top: 16px; border-top: 1px solid #1e293b; }
+  @media (max-width: 900px) { .grid-2, .grid-3 { grid-template-columns: 1fr; } }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div>
+    <h1>⚡ Dashboard Órdenes SAP</h1>
+    <div class="subtitle">Consorcio Normalización ART · Scraper SAP v2</div>
+  </div>
+  <div class="nav-links">
+    <a href="/">🌐 Ecosistema</a>
+    <a href="/ordenes-sap.html" class="active">📊 SAP</a>
+    <a href="/tramites-aciis.html">📋 ACIIS</a>
+  </div>
+</div>
+
+<!-- FILTRO POR DÍA -->
+<div class="filters">
+  <label>📅 Día</label>
+  <select id="filterDay" onchange="applyFilter()">
+    <option value="all">Todos los días</option>
+    <option value="2026-07-02">02 Jul 2026</option>
+    <option value="2026-07-03">03 Jul 2026</option>
+  </select>
+  <span class="period-label" id="periodLabel">Mostrando: Todos los días</span>
+</div>
+
+<!-- KPI CARDS -->
+<div class="kpi-grid">
+  <div class="kpi-card" style="--accent:#60a5fa">
+    <div class="label">📋 Total Órdenes</div>
+    <div class="value" id="kpiTotal">510</div>
+    <div class="sub">En base de datos</div>
+  </div>
+  <div class="kpi-card" style="--accent:#fbbf24">
+    <div class="label">⏳ Por Asignar</div>
+    <div class="value" id="kpiAsignar">112</div>
+    <div class="sub">Esperando asignación</div>
+  </div>
+  <div class="kpi-card" style="--accent:#34d399">
+    <div class="label">🔧 En Tratamiento</div>
+    <div class="value" id="kpiTratamiento">255</div>
+    <div class="sub">Asignadas a digitadoras</div>
+  </div>
+  <div class="kpi-card" style="--accent:#f87171">
+    <div class="label">🔒 Cierre Técnico</div>
+    <div class="value" id="kpiCierreTecnico">143</div>
+    <div class="sub">Cerradas técnicamente</div>
+  </div>
+  <div class="kpi-card" style="--accent:#f472b6">
+    <div class="label">🔄 Cambios de Estado</div>
+    <div class="value" id="kpiCambios">257</div>
+    <div class="sub">Registrados</div>
+  </div>
+  <div class="kpi-card" style="--accent:#a78bfa">
+    <div class="label">📅 Capturadas hoy</div>
+    <div class="value" id="kpiHoy">111</div>
+    <div class="sub">03 Julio 2026</div>
+  </div>
+  <div class="kpi-card" style="--accent:#74b9ff">
+    <div class="label">🌍 Cantones</div>
+    <div class="value" id="kpiCantones">6</div>
+    <div class="sub" id="subCantones">Samborondón, Durán, Daule +</div>
+  </div>
+</div>
+
+<!-- CHARTS -->
+<div class="grid-2">
+  <div class="card"><h2>📈 Capturas por Día</h2><canvas id="captureChart"></canvas></div>
+  <div class="card"><h2>🔁 Cambios de Estado por Día</h2><canvas id="changesChart"></canvas></div>
+</div>
+
+<div class="grid-3">
+  <div class="card"><h2>🏆 Órdenes por Cantón</h2><table class="stat-table" id="cantonTable"></table></div>
+  <div class="card"><h2>📊 Estado General</h2><canvas id="stateChart"></canvas></div>
+  <div class="card"><h2>📋 Últimas Actividades</h2><table class="stat-table" id="recentTable"></table></div>
+</div>
+
+<div class="footer">
+  Consorcio Normalización ART · Datos extraídos vía scraper SAP Web · Último scrape: 03 Jul 2026
+</div>
+
+<script>
+Chart.defaults.color = '#94a3b8';
+Chart.defaults.font.family = 'Inter, sans-serif';
+
+let DATA = null;
+let captureChart, changesChart, stateChart;
+
+// --- Cargar datos desde la API ---
+async function cargarDatos() {
+  try {
+    const resp = await fetch('/api/ordenes-sap');
+    DATA = await resp.json();
+    initFiltros();
+    aplicarFiltro();
+    renderActividades();
+  } catch(e) {
+    document.getElementById('periodLabel').textContent = '❌ Error cargando datos: ' + e.message;
+  }
+}
+
+// --- Inicializar filtro de días ---
+function initFiltros() {
+  const sel = document.getElementById('filterDay');
+  // Limpiar opciones existentes
+  sel.innerHTML = '<option value="all">Todos los días</option>';
+  DATA.dias.forEach((d, i) => {
+    const opt = document.createElement('option');
+    opt.value = d;
+    opt.textContent = DATA.labels[i];
+    sel.appendChild(opt);
+  });
+}
+
+function aplicarFiltro() {
+  const day = document.getElementById('filterDay').value;
+  const isAll = day === 'all';
+
+  // KPI totals
+  let total, porAsig, enTrat, cierreTec, cambios, idx;
+  if (isAll) {
+    total = DATA.dayTotal.reduce((a,b)=>a+b, 0);
+    porAsig = DATA.dayPorAsignar.reduce((a,b)=>a+b, 0);
+    enTrat = DATA.dayEnTratamiento.reduce((a,b)=>a+b, 0);
+    cierreTec = DATA.dayCierreTecnico.reduce((a,b)=>a+b, 0);
+    cambios = DATA.dayCambios.reduce((a,b)=>a+b, 0);
+  } else {
+    idx = DATA.dias.indexOf(day);
+    total = DATA.dayTotal[idx];
+    porAsig = DATA.dayPorAsignar[idx];
+    enTrat = DATA.dayEnTratamiento[idx];
+    cierreTec = DATA.dayCierreTecnico[idx];
+    cambios = DATA.dayCambios[idx];
+  }
+
+  document.getElementById('kpiTotal').textContent = total;
+  document.getElementById('kpiAsignar').textContent = porAsig;
+  document.getElementById('kpiTratamiento').textContent = enTrat;
+  document.getElementById('kpiCierreTecnico').textContent = cierreTec;
+  document.getElementById('kpiCambios').textContent = cambios;
+  document.getElementById('kpiHoy').textContent = DATA.capturadasHoy;
+  document.getElementById('periodLabel').textContent =
+    isAll ? 'Mostrando: Todos los días' : 'Mostrando: ' + DATA.labels[idx];
+
+  // Cantones
+  const cantones = DATA.cantonesDia[day] || DATA.cantonesDia.all;
+  const maxCanton = Math.max(...cantones.map(c => c.tot));
+  const colors = ['#60a5fa','#34d399','#fbbf24','#f472b6','#a78bfa','#64748b'];
+  const totalCant = cantones.reduce((a,c) => a + c.tot, 0);
+  document.getElementById('kpiCantones').textContent = cantones.length;
+  document.getElementById('subCantones').textContent = cantones.slice(0,3).map(c => c.nom).join(', ') + ' +';
+  document.getElementById('cantonTable').innerHTML =
+    `<tr><th>Cantón</th><th class="num">Órdenes</th><th></th><th class="num">%</th></tr>` +
+    cantones.map((c, i) =>
+      `<tr><td>${c.nom}</td><td class="num">${c.tot}</td><td style="width:120px"><div class="bar-bg"><div class="bar-fill" style="width:${(c.tot/maxCanton*100).toFixed(0)}%;background:${colors[i]}"></div></div></td><td class="num" style="color:#64748b">${((c.tot/totalCant)*100).toFixed(1)}%</td></tr>`
+    ).join('');
+
+  // Charts
+  if (captureChart) captureChart.destroy();
+  captureChart = new Chart(document.getElementById('captureChart'), {
+    type: 'bar',
+    data: {
+      labels: isAll ? DATA.labels : [DATA.labels[idx]],
+      datasets: [{
+        label: 'Órdenes capturadas',
+        data: isAll ? DATA.dayTotal : [total],
+        backgroundColor: isAll ? ['rgba(96,165,250,.7)','rgba(167,139,250,.7)'] : ['rgba(96,165,250,.7)'],
+        borderColor: isAll ? ['#60a5fa','#a78bfa'] : ['#60a5fa'],
+        borderWidth: 1, borderRadius: 4
+      }]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: { legend: { display: false } },
+      scales: { x: { grid: { color: '#1e293b' } }, y: { grid: { color: '#1e293b' }, beginAtZero: true } }
+    }
+  });
+
+  if (changesChart) changesChart.destroy();
+  changesChart = new Chart(document.getElementById('changesChart'), {
+    type: 'bar',
+    data: {
+      labels: isAll ? DATA.labels : [DATA.labels[idx]],
+      datasets: [{
+        label: 'Cambios de estado',
+        data: isAll ? DATA.dayCambios : [cambios],
+        backgroundColor: 'rgba(244,114,182,.7)',
+        borderColor: '#f472b6',
+        borderWidth: 1, borderRadius: 4
+      }]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: { legend: { display: false } },
+      scales: { x: { grid: { color: '#1e293b' } }, y: { grid: { color: '#1e293b' }, beginAtZero: true } }
+    }
+  });
+
+  if (stateChart) stateChart.destroy();
+  stateChart = new Chart(document.getElementById('stateChart'), {
+    type: 'doughnut',
+    data: {
+      labels: ['En Tratamiento (' + enTrat + ')', 'Por Asignar (' + porAsig + ')', 'Cierre Técnico (' + cierreTec + ')'],
+      datasets: [{
+        data: [enTrat, porAsig, cierreTec],
+        backgroundColor: ['rgba(52,211,153,.8)', 'rgba(251,191,36,.8)', 'rgba(248,113,113,.8)'],
+        borderColor: ['#34d399', '#fbbf24', '#f87171'],
+        borderWidth: 2
+      }]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false, cutout: '65%',
+      plugins: { legend: { position: 'bottom', labels: { padding: 12, usePointStyle: true } } }
+    }
+  });
+}
+
+// Renombrar la función para compatibilidad con el HTML
+const applyFilter = aplicarFiltro;
+
+// --- Últimas Actividades ---
+function renderActividades() {
+  document.getElementById('recentTable').innerHTML =
+    `<tr><th>Orden SAP</th><th>Cambio</th><th class="num">Hora</th></tr>` +
+    DATA.actividades.map(r =>
+      `<tr><td style="font-family:monospace;font-size:12px">${r.orden}</td><td><span class="badge badge-ok">${r.cambio}</span></td><td class="num" style="color:#64748b">${r.cuando}</td></tr>`
+    ).join('');
+}
+
+// --- Init ---
+cargarDatos();
+</script>
+</body>
+</html>

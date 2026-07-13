@@ -1,0 +1,19 @@
+# Secrets / Environment
+.env
+.env.*
+
+# IDE & OS clutter
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+
+# Git itself
+.git/
+
+# Logs / Temp
+*.log
+/tmp/
+
+# Large generated files (PDFs can be regenerated)
+mis_imagenes.pdf

@@ -1,0 +1,374 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Trámites ACIIS · Consorcio ART</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: 'Inter', sans-serif;
+    background: #0a0e1a;
+    color: #e0e6f0;
+    padding: 24px;
+    min-height: 100vh;
+  }
+  .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; flex-wrap: wrap; gap: 12px; }
+  .header h1 {
+    font-size: 26px; font-weight: 800;
+    background: linear-gradient(135deg, #f97316, #a78bfa);
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+  }
+  .header .subtitle { color: #94a3b8; font-size: 14px; }
+  .header .nav-links { display: flex; gap: 12px; font-size: 13px; }
+  .header .nav-links a { color: #64748b; text-decoration: none; padding: 4px 12px; border-radius: 6px; border: 1px solid #1e293b; transition: .2s; }
+  .header .nav-links a:hover { color: #e0e6f0; border-color: #475569; background: #1a1f35; }
+  .header .nav-links a.active { color: #f97316; border-color: #f97316; }
+  .filters {
+    display: flex; align-items: center; gap: 14px; flex-wrap: wrap;
+    background: #111827; border: 1px solid #1e293b; border-radius: 12px; padding: 12px 18px;
+    margin-bottom: 20px;
+  }
+  .filters label { font-size: 12px; font-weight: 600; color: #94a3b8; text-transform: uppercase; letter-spacing: .05em; }
+  .filters select {
+    background: #1a1f35; color: #e0e6f0; border: 1px solid #2a2a3a; border-radius: 8px;
+    padding: 6px 12px; font-size: 13px; font-family: 'Inter', sans-serif;
+    cursor: pointer; outline: none;
+  }
+  .filters select:hover { border-color: #f97316; }
+  .filters select:focus { border-color: #f97316; }
+  .filters .period-label { font-size: 12px; color: #64748b; margin-left: 4px; }
+  .kpi-grid {
+    display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 14px; margin-bottom: 20px;
+  }
+  .kpi-card {
+    background: linear-gradient(145deg, #111827, #1a1f35);
+    border: 1px solid #1e293b; border-radius: 14px; padding: 18px;
+    transition: transform .2s, box-shadow .2s;
+    position: relative; overflow: hidden;
+  }
+  .kpi-card::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px; background: var(--accent); }
+  .kpi-card:hover { transform: translateY(-2px); box-shadow: 0 8px 25px rgba(249,115,22,.08); }
+  .kpi-card .label { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: .06em; color: #64748b; margin-bottom: 4px; }
+  .kpi-card .value { font-size: 30px; font-weight: 800; line-height: 1.2; color: var(--accent); }
+  .kpi-card .sub { font-size: 11px; color: #94a3b8; margin-top: 4px; }
+  .kpi-card .small-value { font-size: 18px; font-weight: 700; color: var(--accent); }
+  .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 16px; }
+  .grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px; margin-bottom: 16px; }
+  .card { background: #111827; border: 1px solid #1e293b; border-radius: 14px; padding: 20px; }
+  .card h2 { font-size: 14px; font-weight: 700; color: #94a3b8; margin-bottom: 14px; text-transform: uppercase; letter-spacing: .04em; }
+  .card canvas { max-height: 260px; max-width: 100%; }
+  .stat-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  .stat-table th { text-align: left; font-size: 11px; font-weight: 600; color: #475569; text-transform: uppercase; padding: 5px 8px; border-bottom: 1px solid #1e293b; }
+  .stat-table td { padding: 5px 8px; border-bottom: 1px solid #1a1f35; color: #cbd5e1; }
+  .stat-table tr:last-child td { border-bottom: none; }
+  .stat-table .num { text-align: right; font-weight: 600; color: #e0e6f0; }
+  .bar-bg { height: 4px; background: #1e293b; border-radius: 4px; margin-top: 4px; overflow: hidden; }
+  .bar-fill { height: 100%; border-radius: 4px; transition: width .6s ease; }
+  .badge { display: inline-block; padding: 2px 8px; border-radius: 12px; font-size: 10px; font-weight: 700; text-transform: uppercase; }
+  .badge-ok { background: rgba(52,211,153,.12); color: #34d399; }
+  .badge-warn { background: rgba(251,191,36,.12); color: #fbbf24; }
+  .badge-pend { background: rgba(96,165,250,.12); color: #60a5fa; }
+  .footer { text-align: center; color: #475569; font-size: 11px; margin-top: 24px; padding-top: 16px; border-top: 1px solid #1e293b; }
+  @media (max-width: 900px) { .grid-2, .grid-3 { grid-template-columns: 1fr; } }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div>
+    <h1>📋 Trámites ACIIS</h1>
+    <div class="subtitle">Consorcio Normalización ART · Asignados vs Ejecutados</div>
+  </div>
+  <div class="nav-links">
+    <a href="/">🌐 Ecosistema</a>
+    <a href="/ordenes-sap.html">📊 SAP</a>
+    <a href="/tramites-aciis.html" class="active">📋 ACIIS</a>
+  </div>
+</div>
+
+<!-- FILTRO DE MESES -->
+<div class="filters">
+  <label>📅 Desde</label>
+  <select id="filterFrom" onchange="applyFilter()"></select>
+  <label>Hasta</label>
+  <select id="filterTo" onchange="applyFilter()"></select>
+  <span class="period-label" id="periodLabel">Mostrando: Todo el período</span>
+</div>
+
+<!-- KPI CARDS -->
+<div class="kpi-grid" id="kpiGrid">
+  <div class="kpi-card" style="--accent:#60a5fa">
+    <div class="label">📋 Asignados</div>
+    <div class="value" id="kpiAsignados">78,487</div>
+    <div class="sub" id="subAsignados">recorrido_cuadrillas</div>
+  </div>
+  <div class="kpi-card" style="--accent:#34d399">
+    <div class="label">✅ Ejecutados</div>
+    <div class="value" id="kpiEjecutados">72,822</div>
+    <div class="sub" id="subEjecutados">gestion_tramites</div>
+  </div>
+  <div class="kpi-card" style="--accent:#fbbf24">
+    <div class="label">⏳ Pendientes</div>
+    <div class="value" id="kpiPendientes">5,665</div>
+    <div class="sub" id="subPendientes">asignados sin ejecutar</div>
+  </div>
+  <div class="kpi-card" style="--accent:#f97316">
+    <div class="label">📊 Ejecución</div>
+    <div class="value" id="kpiEjecucion">92.8%</div>
+    <div class="sub" id="subEjecucion">(72,822 / 78,487)</div>
+  </div>
+  <div class="kpi-card" style="--accent:#a78bfa">
+    <div class="label">📅 Prom. días</div>
+    <div class="value">1.4</div>
+    <div class="sub">asignación → ejecución</div>
+  </div>
+</div>
+
+<!-- CHARTS -->
+<div class="grid-2">
+  <div class="card"><h2>📈 Tendencia Mensual</h2><canvas id="trendChart"></canvas></div>
+  <div class="card"><h2>📊 Últimos 7 Días</h2><canvas id="weeklyChart"></canvas></div>
+</div>
+
+<div class="grid-3">
+  <div class="card"><h2>🏆 Top Cuadrillas</h2><table class="stat-table" id="cuadrillasTable"></table></div>
+  <div class="card"><h2>📋 Tipos de Solicitud</h2><canvas id="tiposChart"></canvas></div>
+  <div class="card"><h2>🏢 Tipos de Orden</h2><canvas id="tiposOrdenChart"></canvas></div>
+</div>
+
+<div class="footer">
+  Consorcio Normalización ART · Datos de gestion_medidores.db · Actualizado: 03 Jul 2026
+</div>
+
+<script>
+Chart.defaults.color = '#94a3b8';
+Chart.defaults.font.family = 'Inter, sans-serif';
+
+let DATA = null;
+let trendChart, weeklyChart, tiposChart, tiposOrdenChart;
+
+// --- Cargar datos desde la API ---
+async function cargarDatos() {
+  try {
+    const resp = await fetch('/api/tramites-aciis');
+    DATA = await resp.json();
+    initFiltros();
+    aplicarFiltro();
+    renderWeekly();
+  } catch(e) {
+    document.getElementById('periodLabel').textContent = '❌ Error: ' + e.message;
+  }
+}
+
+// --- Inicializar selectores ---
+function initFiltros() {
+  const fromSel = document.getElementById('filterFrom');
+  const toSel = document.getElementById('filterTo');
+  DATA.meses.forEach((m, i) => {
+    const opt1 = document.createElement('option'); opt1.value = i; opt1.textContent = DATA.labels[i];
+    const opt2 = document.createElement('option'); opt2.value = i; opt2.textContent = DATA.labels[i];
+    fromSel.appendChild(opt1);
+    toSel.appendChild(opt2);
+  });
+  fromSel.value = 0;
+  toSel.value = DATA.meses.length - 1;
+}
+
+function aplicarFiltro() {
+  const from = parseInt(document.getElementById('filterFrom').value);
+  const to = parseInt(document.getElementById('filterTo').value);
+  const labels = DATA.labels.slice(from, to + 1);
+  const asignados = DATA.dataAsignados.slice(from, to + 1);
+  const ejecutados = DATA.dataEjecutados.slice(from, to + 1);
+  const pendientes = DATA.dataPendientes.slice(from, to + 1);
+
+  const totAsig = asignados.reduce((a,b) => a + b, 0);
+  const totEje = ejecutados.reduce((a,b) => a + b, 0);
+  const totPen = pendientes.reduce((a,b) => a + b, 0);
+  const pct = totAsig > 0 ? ((totEje / totAsig) * 100).toFixed(1) : '0.0';
+
+  document.getElementById('kpiAsignados').textContent = totAsig.toLocaleString();
+  document.getElementById('kpiEjecutados').textContent = totEje.toLocaleString();
+  document.getElementById('kpiPendientes').textContent = totPen.toLocaleString();
+  document.getElementById('kpiEjecucion').textContent = pct + '%';
+  document.getElementById('subAsignados').textContent = (to - from + 1) + ' meses: ' + DATA.labels[from] + ' → ' + DATA.labels[to];
+  document.getElementById('subEjecutados').textContent = (to - from + 1) + ' meses';
+  document.getElementById('subPendientes').textContent = (to - from + 1) + ' meses';
+  document.getElementById('subEjecucion').textContent = '(' + totEje.toLocaleString() + ' / ' + totAsig.toLocaleString() + ')';
+
+  const desde = DATA.labels[from];
+  const hasta = DATA.labels[to];
+  document.getElementById('periodLabel').textContent =
+    (from === 0 && to === DATA.meses.length - 1) ? 'Mostrando: Todo el período' :
+    (from === to) ? 'Mostrando: ' + desde : 'Mostrando: ' + desde + ' → ' + hasta;
+
+  // --- Filtrar cuadrillas por meses ---
+  const mesesFiltro = DATA.meses.slice(from, to + 1);
+  const cuadrillasAgg = {};
+  mesesFiltro.forEach(m => {
+    const lista = DATA.cuadrillas_mensual[m] || [];
+    lista.forEach(c => {
+      cuadrillasAgg[c.nom] = (cuadrillasAgg[c.nom] || 0) + c.tot;
+    });
+  });
+  const cuadrillasTop = Object.entries(cuadrillasAgg)
+    .sort((a, b) => b[1] - a[1])
+    .slice(0, 8)
+    .map(([nom, tot]) => ({nom, tot}));
+  renderCuadrillas(cuadrillasTop);
+
+  // --- Filtrar tipos por meses ---
+  const tiposAgg = {};
+  mesesFiltro.forEach(m => {
+    const lista = DATA.tipos_mensual[m] || [];
+    lista.forEach(t => {
+      tiposAgg[t.nom] = (tiposAgg[t.nom] || 0) + t.tot;
+    });
+  });
+  const tiposTop = Object.entries(tiposAgg)
+    .sort((a, b) => b[1] - a[1])
+    .slice(0, 8)
+    .map(([nom, tot]) => ({nom, tot}));
+  renderTipos(tiposTop);
+
+  // --- Filtrar tipos de orden por meses ---
+  const toAgg = {};
+  mesesFiltro.forEach(m => {
+    const lista = DATA.tipos_orden_mensual[m] || [];
+    lista.forEach(t => {
+      toAgg[t.nom] = (toAgg[t.nom] || 0) + t.tot;
+    });
+  });
+  const toTop = Object.entries(toAgg)
+    .sort((a, b) => b[1] - a[1])
+    .slice(0, 8)
+    .map(([nom, tot]) => ({nom, tot}));
+  renderTiposOrden(toTop);
+
+  if (trendChart) trendChart.destroy();
+  trendChart = new Chart(document.getElementById('trendChart'), {
+    type: 'bar',
+    data: {
+      labels,
+      datasets: [
+        {
+          label: 'Asignados',
+          data: asignados,
+          backgroundColor: 'rgba(96,165,250,.7)',
+          borderColor: '#60a5fa',
+          borderWidth: 1, borderRadius: 3
+        },
+        {
+          label: 'Ejecutados',
+          data: ejecutados,
+          backgroundColor: 'rgba(52,211,153,.7)',
+          borderColor: '#34d399',
+          borderWidth: 1, borderRadius: 3
+        }
+      ]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: { legend: { position: 'top', labels: { boxWidth: 12, padding: 10, usePointStyle: true } } },
+      scales: { x: { grid: { color: '#1e293b' } }, y: { grid: { color: '#1e293b' }, beginAtZero: true } }
+    }
+  });
+}
+
+const applyFilter = aplicarFiltro;
+
+// --- Últimos 7 Días ---
+function renderWeekly() {
+  new Chart(document.getElementById('weeklyChart'), {
+    type: 'line',
+    data: {
+      labels: DATA.weeklyLabels,
+      datasets: [
+        {
+          label: 'Asignados',
+          data: DATA.weeklyAsignados,
+          borderColor: '#60a5fa',
+          backgroundColor: 'rgba(96,165,250,.1)',
+          fill: true, tension: .3, pointRadius: 4, pointBackgroundColor: '#60a5fa'
+        },
+        {
+          label: 'Ejecutados',
+          data: DATA.weeklyEjecutados,
+          borderColor: '#34d399',
+          backgroundColor: 'rgba(52,211,153,.1)',
+          fill: true, tension: .3, pointRadius: 4, pointBackgroundColor: '#34d399'
+        }
+      ]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: { legend: { position: 'top', labels: { boxWidth: 12, padding: 10, usePointStyle: true } } },
+      scales: { x: { grid: { color: '#1e293b' } }, y: { grid: { color: '#1e293b' }, beginAtZero: true } }
+    }
+  });
+}
+
+// --- Cuadrillas ---
+function renderCuadrillas(lista) {
+  if (!lista) lista = DATA.cuadrillas;
+  const maxCuad = Math.max(...lista.map(c => c.tot));
+  document.getElementById('cuadrillasTable').innerHTML =
+    `<tr><th>Cuadrilla</th><th class="num">Asignados</th><th></th></tr>` +
+    lista.map(c =>
+      `<tr><td>${c.nom}</td><td class="num">${c.tot.toLocaleString()}</td><td style="width:100px"><div class="bar-bg"><div class="bar-fill" style="width:${(c.tot/maxCuad*100).toFixed(0)}%;background:#f97316"></div></div></td></tr>`
+    ).join('');
+}
+
+// --- Tipos de Solicitud ---
+function renderTipos(lista) {
+  if (!lista) lista = DATA.tipos;
+  const totalTipos = lista.reduce((a, t) => a + t.tot, 0);
+  const colors = ['rgba(249,115,22,.8)','rgba(96,165,250,.8)','rgba(52,211,153,.8)','rgba(167,139,250,.8)','rgba(251,191,36,.8)','rgba(244,114,182,.8)','rgba(116,185,255,.8)','rgba(108,92,231,.8)'];
+  if (tiposChart) tiposChart.destroy();
+  tiposChart = new Chart(document.getElementById('tiposChart'), {
+    type: 'doughnut',
+    data: {
+      labels: lista.map(t => t.nom + ' (' + t.tot.toLocaleString() + ')'),
+      datasets: [{
+        data: lista.map(t => t.tot),
+        backgroundColor: colors.slice(0, lista.length),
+        borderWidth: 1
+      }]
+    },
+    options: { responsive: true, maintainAspectRatio: false, cutout: '50%',
+      plugins: { legend: { position: 'bottom', labels: { padding: 8, boxWidth: 10, font: { size: 10 } } } }
+    }
+  });
+}
+
+// --- Tipos de Orden ---
+function renderTiposOrden(lista) {
+  if (!lista) lista = [];
+  const total = lista.reduce((a, t) => a + t.tot, 0);
+  const colors = ['rgba(116,185,255,.8)','rgba(108,92,231,.8)','rgba(249,115,22,.8)','rgba(52,211,153,.8)','rgba(251,191,36,.8)','rgba(244,114,182,.8)','rgba(96,165,250,.8)','rgba(167,139,250,.8)'];
+  if (tiposOrdenChart) tiposOrdenChart.destroy();
+  tiposOrdenChart = new Chart(document.getElementById('tiposOrdenChart'), {
+    type: 'doughnut',
+    data: {
+      labels: lista.map(t => t.nom + ' (' + t.tot.toLocaleString() + ')'),
+      datasets: [{
+        data: lista.map(t => t.tot),
+        backgroundColor: colors.slice(0, lista.length),
+        borderWidth: 1
+      }]
+    },
+    options: { responsive: true, maintainAspectRatio: false, cutout: '50%',
+      plugins: { legend: { position: 'bottom', labels: { padding: 8, boxWidth: 10, font: { size: 10 } } } }
+    }
+  });
+}
+
+// --- Init ---
+cargarDatos();
+</script>
+</body>
+</html>

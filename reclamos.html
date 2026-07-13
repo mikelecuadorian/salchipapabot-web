@@ -1,0 +1,495 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Dashboard RECL — Reclamos</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
+<style>
+  :root {
+    --accent: #f472b6;
+    --accent2: #60a5fa;
+    --accent3: #34d399;
+    --accent4: #fbbf24;
+    --bg: #0a0e1a;
+    --card: #111827;
+    --border: #1e293b;
+    --text: #e0e6f0;
+    --muted: #64748b;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { background: var(--bg); color: var(--text); font-family: 'Inter', system-ui, sans-serif; padding: 24px; }
+  .container { max-width: 1400px; margin: 0 auto; }
+  h1 { font-size: 22px; font-weight: 700; margin-bottom: 4px; }
+  .subtitle { font-size: 13px; color: var(--muted); margin-bottom: 24px; }
+  .nav-links { display: flex; gap: 10px; margin-bottom: 20px; font-size: 13px; flex-wrap: wrap; }
+  .nav-links a { color: var(--muted); text-decoration: none; padding: 5px 14px; border-radius: 8px; border: 1px solid var(--border); transition: .2s; }
+  .nav-links a:hover { color: var(--text); border-color: #475569; background: #1a1f35; }
+  .nav-links a.active { color: var(--accent); border-color: var(--accent); }
+
+  /* KPI Grid */
+  .kpi-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 14px; margin-bottom: 20px; }
+  .kpi-card { background: var(--card); border: 1px solid var(--border); border-radius: 14px; padding: 18px 20px; transition: .2s; }
+  .kpi-card:hover { transform: translateY(-2px); border-color: #374151; }
+  .kpi-label { font-size: 11px; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); font-weight: 600; margin-bottom: 6px; }
+  .kpi-value { font-size: 28px; font-weight: 700; line-height: 1.1; }
+  .kpi-sub { font-size: 12px; color: var(--muted); margin-top: 4px; }
+  .kpi-card.accent1 .kpi-value { color: #f472b6; }
+  .kpi-card.accent2 .kpi-value { color: #60a5fa; }
+  .kpi-card.accent3 .kpi-value { color: #34d399; }
+  .kpi-card.accent4 .kpi-value { color: #fbbf24; }
+  .kpi-card.accent5 .kpi-value { color: #a78bfa; }
+  .kpi-card.accent6 .kpi-value { color: #f97316; }
+
+  /* Filters */
+  .filters { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; background: var(--card); border: 1px solid var(--border); border-radius: 12px; padding: 12px 18px; margin-bottom: 20px; }
+  .filters label { font-size: 12px; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: .05em; }
+  .filters select { background: #1a1f35; color: var(--text); border: 1px solid #2a2a3a; border-radius: 8px; padding: 7px 14px; font-family: 'Inter', sans-serif; cursor: pointer; outline: none; min-width: 160px; }
+  .filters select:hover { border-color: var(--accent2); }
+  .filters .btn-reset { background: #1e293b; color: var(--muted); border: 1px solid var(--border); border-radius: 8px; padding: 7px 16px; cursor: pointer; font-size: 12px; font-family: 'Inter', sans-serif; transition: .2s; }
+  .filters .btn-reset:hover { color: var(--text); border-color: var(--muted); }
+  .filters .result-count { font-size: 13px; color: var(--accent2); margin-left: auto; }
+
+  /* Grid layouts */
+  .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 16px; }
+
+  .chart-card { background: var(--card); border: 1px solid var(--border); border-radius: 14px; padding: 20px; }
+  .chart-card h3 { font-size: 14px; font-weight: 600; margin-bottom: 14px; color: #c8d0dc; }
+  .chart-wrap { position: relative; min-height: 260px; }
+
+  /* Tables */
+  .data-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  .data-table th { text-align: left; padding: 8px 12px; font-weight: 600; color: var(--muted); font-size: 11px; text-transform: uppercase; letter-spacing: .05em; border-bottom: 1px solid var(--border); }
+  .data-table td { padding: 7px 12px; border-bottom: 1px solid #1a1f30; vertical-align: top; }
+  .data-table tr:last-child td { border-bottom: none; }
+  .data-table .num { text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; }
+  .bar-cell { display: flex; align-items: center; gap: 10px; }
+  .bar-cell .bar { height: 6px; border-radius: 3px; flex-shrink: 0; transition: width .4s; }
+  .bar-cell .val { font-weight: 600; min-width: 44px; text-align: right; }
+
+  /* Detail table (scrollable) */
+  .detail-section { margin-top: 16px; }
+  .detail-section h3 { font-size: 14px; font-weight: 600; margin-bottom: 10px; color: #c8d0dc; }
+  .detail-wrap { max-height: 500px; overflow-y: auto; border: 1px solid var(--border); border-radius: 10px; }
+  .detail-wrap .data-table { font-size: 12px; }
+  .detail-wrap .data-table th { position: sticky; top: 0; background: var(--card); z-index: 1; }
+  .detail-wrap .data-table td { max-width: 240px; overflow: hidden; text-overflow: ellipsis; }
+  .detail-wrap .data-table td.obs-cell { max-width: 350px; white-space: pre-wrap; word-break: break-word; font-size: 11px; color: #c8d0dc; }
+  .detail-wrap::-webkit-scrollbar { width: 6px; }
+  .detail-wrap::-webkit-scrollbar-track { background: var(--bg); border-radius: 3px; }
+  .detail-wrap::-webkit-scrollbar-thumb { background: #334155; border-radius: 3px; }
+
+  /* Observación badge */
+  .obs-empty { color: var(--muted); font-style: italic; font-size: 11px; }
+  .obs-content { font-size: 11px; line-height: 1.4; }
+
+  /* Loading */
+  .loading { text-align: center; padding: 60px 20px; color: var(--muted); }
+  .loading .spinner { display: inline-block; width: 32px; height: 32px; border: 3px solid var(--border); border-top-color: var(--accent2); border-radius: 50%; animation: spin .8s linear infinite; margin-bottom: 12px; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  /* Responsive */
+  @media (max-width: 900px) {
+    .grid-2 { grid-template-columns: 1fr; }
+    .kpi-grid { grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); }
+    .filters { flex-direction: column; align-items: stretch; }
+    .filters select { width: 100%; }
+    .filters .result-count { margin-left: 0; }
+  }
+</style>
+</head>
+<body>
+<div class="container">
+
+  <div class="nav-links">
+    <a href="/">🌐 Home</a>
+    <a href="/tramites-aciis.html">📋 ACIIS</a>
+    <a href="/ordenes-sap.html">⚡ SAP</a>
+    <a href="/reclamos.html" class="active">📢 RECL</a>
+  </div>
+
+  <h1>📢 Dashboard de Reclamos (RECL)</h1>
+  <p class="subtitle" id="subtitle">Cargando...</p>
+
+  <!-- LOADING -->
+  <div class="loading" id="loading">
+    <div class="spinner"></div>
+    <div>Cargando datos desde la base de datos...</div>
+  </div>
+
+  <!-- CONTENT (hidden until loaded) -->
+  <div id="content" style="display:none">
+
+    <!-- KPI CARDS -->
+    <div class="kpi-grid">
+      <div class="kpi-card accent1">
+        <div class="kpi-label">Total RECL</div>
+        <div class="kpi-value" id="kpiTotal">—</div>
+        <div class="kpi-sub">registros en BD</div>
+      </div>
+      <div class="kpi-card accent2">
+        <div class="kpi-label">Ejecutados</div>
+        <div class="kpi-value" id="kpiEjecutados">—</div>
+        <div class="kpi-sub" id="kpiEjecutadosSub">—</div>
+      </div>
+      <div class="kpi-card accent4">
+        <div class="kpi-label">Pendientes</div>
+        <div class="kpi-value" id="kpiPendientes">—</div>
+        <div class="kpi-sub">sin ejecutar</div>
+      </div>
+      <div class="kpi-card accent3">
+        <div class="kpi-label">Días promedio</div>
+        <div class="kpi-value" id="kpiDias">—</div>
+        <div class="kpi-sub">de gestión</div>
+      </div>
+      <div class="kpi-card accent5">
+        <div class="kpi-label">Cuadrillas</div>
+        <div class="kpi-value" id="kpiCuadrillas">—</div>
+        <div class="kpi-sub">activas en RECL</div>
+      </div>
+      <div class="kpi-card accent6">
+        <div class="kpi-label">Parroquias</div>
+        <div class="kpi-value" id="kpiParroquias">—</div>
+        <div class="kpi-sub">con RECL</div>
+      </div>
+    </div>
+
+    <!-- FILTERS -->
+    <div class="filters">
+      <label>📅 Día</label>
+      <select id="filterDia" onchange="aplicarFiltro()">
+        <option value="">Todos los días</option>
+      </select>
+      <label>👷 Cuadrilla</label>
+      <select id="filterCuadrilla" onchange="aplicarFiltro()">
+        <option value="">Todas las cuadrillas</option>
+      </select>
+      <button class="btn-reset" onclick="resetFiltros()">✕ Limpiar</button>
+      <span class="result-count" id="resultCount"></span>
+    </div>
+
+    <!-- CHARTS ROW 1 -->
+    <div class="grid-2">
+      <div class="chart-card">
+        <h3>📈 Tendencia Mensual</h3>
+        <div class="chart-wrap"><canvas id="monthlyChart"></canvas></div>
+      </div>
+      <div class="chart-card">
+        <h3>🥧 Tipo de Reclamo</h3>
+        <div class="chart-wrap"><canvas id="tipoChart"></canvas></div>
+      </div>
+    </div>
+
+    <!-- CHARTS ROW 2 -->
+    <div class="grid-2">
+      <div class="chart-card">
+        <h3>📊 Últimos 7 Días</h3>
+        <div class="chart-wrap"><canvas id="dailyChart"></canvas></div>
+      </div>
+      <div class="chart-card">
+        <h3>🔧 Estado de Instalación</h3>
+        <div class="chart-wrap"><canvas id="estadoChart"></canvas></div>
+      </div>
+    </div>
+
+    <!-- TABLES: Cuadrillas + Parroquias -->
+    <div class="grid-2">
+      <div class="chart-card">
+        <h3>👷 Top Cuadrillas</h3>
+        <table class="data-table">
+          <thead><tr><th>Cuadrilla</th><th class="num">Trámites</th><th style="width:40%"></th></tr></thead>
+          <tbody id="cuadrillasBody"></tbody>
+        </table>
+      </div>
+      <div class="chart-card">
+        <h3>📍 Parroquias con más RECL</h3>
+        <table class="data-table">
+          <thead><tr><th>Parroquia</th><th class="num">Trámites</th><th style="width:40%"></th></tr></thead>
+          <tbody id="parroquiasBody"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- DETAIL TABLE: Trámites con observación -->
+    <div class="detail-section">
+      <h3>📋 Detalle de Trámites</h3>
+      <div class="detail-wrap">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>N° Trámite</th>
+              <th>🔍 Análisis</th>
+              <th>📋 Planificación</th>
+              <th>✅ Ejecución</th>
+              <th>Cuadrilla</th>
+              <th>Tipo</th>
+              <th>Cliente</th>
+              <th>Parroquia</th>
+              <th>📝 Observación</th>
+            </tr>
+          </thead>
+          <tbody id="detalleBody"></tbody>
+        </table>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+let DATA = null;
+let charts = {};
+
+const COLORS = ['#f472b6','#60a5fa','#34d399','#fbbf24','#a78bfa','#f97316','#22d3ee','#e879f9','#fb923c','#4ade80','#f43f5e','#818cf8','#2dd4bf','#fb923c','#a3e635'];
+
+async function cargarDatos() {
+  try {
+    const resp = await fetch('/api/reclamos');
+    DATA = await resp.json();
+    document.getElementById('subtitle').textContent =
+      `Trámites con código_cliente = RECL · gestión_medidores.db · ${DATA.total.toLocaleString()} registros · Actualizado ${new Date().toLocaleDateString('es-ES', { day:'numeric', month:'long', year:'numeric', hour:'2-digit', minute:'2-digit' })}`;
+    poblarFiltros();
+    renderCharts();
+    renderTablas();
+    aplicarFiltro();
+    document.getElementById('loading').style.display = 'none';
+    document.getElementById('content').style.display = 'block';
+  } catch (e) {
+    document.getElementById('loading').innerHTML = `<div style="color:#ef4444">❌ Error al cargar datos: ${e.message}</div>`;
+  }
+}
+
+// ── FILTERS ──
+function poblarFiltros() {
+  const diaSel = document.getElementById('filterDia');
+  const cuadSel = document.getElementById('filterCuadrilla');
+
+  // Opción "Hoy" al inicio
+  const hoyOpt = document.createElement('option');
+  hoyOpt.value = 'hoy';
+  const hoy = new Date();
+  hoyOpt.textContent = '🔴 Hoy (' + hoy.toLocaleDateString('es-ES', { weekday:'short', day:'numeric', month:'short' }) + ')';
+  hoyOpt.style.fontWeight = '600';
+  diaSel.appendChild(hoyOpt);
+
+  DATA.dias.forEach(d => {
+    const opt = document.createElement('option');
+    opt.value = d.dia;
+    const dt = new Date(d.dia + 'T12:00:00');
+    opt.textContent = dt.toLocaleDateString('es-ES', { weekday:'short', day:'numeric', month:'short' }) + ` (${d.tot})`;
+    // Si es el día de hoy, ya lo pusimos arriba
+    if (d.dia === new Date().toISOString().split('T')[0]) return;
+    diaSel.appendChild(opt);
+  });
+
+  // Auto-seleccionar "Hoy" al cargar
+  diaSel.value = 'hoy';
+
+  DATA.cuadrillas.forEach(c => {
+    const opt = document.createElement('option');
+    opt.value = c.nom;
+    opt.textContent = c.nom + ` (${c.tot})`;
+    cuadSel.appendChild(opt);
+  });
+}
+
+function resetFiltros() {
+  document.getElementById('filterDia').value = 'hoy';
+  document.getElementById('filterCuadrilla').value = '';
+  aplicarFiltro();
+}
+
+async function aplicarFiltro() {
+  let dia = document.getElementById('filterDia').value;
+  const cuadrilla = document.getElementById('filterCuadrilla').value;
+
+  // Traducir "hoy" a la fecha actual
+  if (dia === 'hoy') {
+    const hoy = new Date();
+    dia = hoy.getFullYear() + '-' + String(hoy.getMonth() + 1).padStart(2, '0') + '-' + String(hoy.getDate()).padStart(2, '0');
+  }
+
+  let url = '/api/reclamos-detalle?';
+  const params = [];
+  if (dia) params.push(`dia=${encodeURIComponent(dia)}`);
+  if (cuadrilla) params.push(`cuadrilla=${encodeURIComponent(cuadrilla)}`);
+  url += params.join('&');
+
+  try {
+    const resp = await fetch(url);
+    const data = await resp.json();
+    renderDetalle(data.tramites);
+    document.getElementById('resultCount').textContent =
+      `${data.tramites.length} trámites ${dia || cuadrilla ? 'filtrados' : ''}`;
+  } catch (e) {
+    document.getElementById('detalleBody').innerHTML =
+      `<tr><td colspan="7" style="color:#ef4444;text-align:center;padding:20px">❌ Error: ${e.message}</td></tr>`;
+  }
+}
+
+// ── CHARTS ──
+function renderCharts() {
+  Chart.defaults.color = '#94a3b8';
+  Chart.defaults.font.family = 'Inter, sans-serif';
+
+  // Monthly
+  if (charts.monthly) charts.monthly.destroy();
+  charts.monthly = new Chart(document.getElementById('monthlyChart'), {
+    type: 'bar',
+    data: {
+      labels: DATA.mesesLabels,
+      datasets: [
+        { label: 'Ejecutados', data: DATA.mesesData, backgroundColor: 'rgba(96,165,250,.75)', borderRadius: 4 },
+        { label: 'Analizados', data: DATA.mesesAnalData, backgroundColor: 'rgba(244,114,182,.65)', borderRadius: 4 }
+      ]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: { legend: { position: 'top', labels: { boxWidth: 12, padding: 12 } } },
+      scales: {
+        y: { beginAtZero: true, grid: { color: '#1e293b' } },
+        x: { grid: { display: false } }
+      }
+    }
+  });
+
+  // Tipo donut
+  if (charts.tipo) charts.tipo.destroy();
+  const tiposLabels = DATA.tipos.map(t => t.nom + ' (' + t.tot + ')');
+  const tiposData = DATA.tipos.map(t => t.tot);
+  // Group small ones as "Otros" for readability
+  const mainTipos = DATA.tipos.filter(t => t.tot >= 5);
+  const otrosTipos = DATA.tipos.filter(t => t.tot < 5);
+  let finalTiposLabels, finalTiposData;
+  if (otrosTipos.length > 0) {
+    finalTiposLabels = [...mainTipos.map(t => t.nom + ' (' + t.tot + ')'), 'Otros (' + otrosTipos.reduce((a,b) => a + b.tot, 0) + ')'];
+    finalTiposData = [...mainTipos.map(t => t.tot), otrosTipos.reduce((a,b) => a + b.tot, 0)];
+  } else {
+    finalTiposLabels = mainTipos.map(t => t.nom + ' (' + t.tot + ')');
+    finalTiposData = mainTipos.map(t => t.tot);
+  }
+  charts.tipo = new Chart(document.getElementById('tipoChart'), {
+    type: 'doughnut',
+    data: {
+      labels: finalTiposLabels,
+      datasets: [{ data: finalTiposData, backgroundColor: [COLORS[1], COLORS[4], '#334155'] }]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false, cutout: '60%',
+      plugins: { legend: { position: 'bottom', labels: { boxWidth: 12, padding: 10, font: { size: 11 } } } }
+    }
+  });
+
+  // Daily
+  if (charts.daily) charts.daily.destroy();
+  charts.daily = new Chart(document.getElementById('dailyChart'), {
+    type: 'line',
+    data: {
+      labels: DATA.weeklyLabels,
+      datasets: [
+        { label: 'Ejecutados', data: DATA.weeklyEjecutados, borderColor: '#60a5fa', backgroundColor: 'rgba(96,165,250,.08)', fill: true, tension: .3, pointRadius: 4 },
+        { label: 'Analizados', data: DATA.weeklyAnalizados, borderColor: '#f472b6', backgroundColor: 'rgba(244,114,182,.08)', fill: true, tension: .3, pointRadius: 4 }
+      ]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: { legend: { position: 'top', labels: { boxWidth: 12, padding: 12 } } },
+      scales: {
+        y: { beginAtZero: true, grid: { color: '#1e293b' } },
+        x: { grid: { display: false } }
+      }
+    }
+  });
+
+  // Estado instalación
+  if (charts.estado) charts.estado.destroy();
+  if (DATA.estadosInstalacion.length > 0) {
+    const eiLabels = DATA.estadosInstalacion.map(e => e.nom + ' (' + e.tot + ')');
+    const eiColors = ['#34d399', '#fbbf24', '#ef4444'];
+    charts.estado = new Chart(document.getElementById('estadoChart'), {
+      type: 'doughnut',
+      data: {
+        labels: eiLabels,
+        datasets: [{ data: DATA.estadosInstalacion.map(e => e.tot), backgroundColor: eiColors.slice(0, DATA.estadosInstalacion.length) }]
+      },
+      options: {
+        responsive: true, maintainAspectRatio: false, cutout: '60%',
+        plugins: { legend: { position: 'bottom', labels: { boxWidth: 12, padding: 10, font: { size: 11 } } } }
+      }
+    });
+  } else {
+    document.getElementById('estadoChart').parentElement.innerHTML = '<div style="text-align:center;padding:60px 20px;color:var(--muted)">Sin datos de estado de instalación</div>';
+  }
+}
+
+// ── TABLES ──
+function renderTablas() {
+  // KPIs
+  document.getElementById('kpiTotal').textContent = DATA.total.toLocaleString();
+  document.getElementById('kpiEjecutados').textContent = DATA.ejecutados.toLocaleString();
+  document.getElementById('kpiEjecutadosSub').textContent = DATA.porcentajeEjecucion + '% completados';
+  document.getElementById('kpiPendientes').textContent = DATA.pendientes.toLocaleString();
+  document.getElementById('kpiDias').textContent = DATA.diasPromedio;
+  document.getElementById('kpiCuadrillas').textContent = DATA.numCuadrillas;
+  document.getElementById('kpiParroquias').textContent = DATA.numParroquias;
+
+  // Cuadrillas
+  const maxCuad = Math.max(...DATA.cuadrillas.map(c => c.tot));
+  document.getElementById('cuadrillasBody').innerHTML = DATA.cuadrillas.map((c, i) =>
+    `<tr>
+      <td><span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:${COLORS[i % COLORS.length]};margin-right:8px;"></span>${c.nom}</td>
+      <td class="num">${c.tot.toLocaleString()}</td>
+      <td><div class="bar-cell"><div class="bar" style="width:${(c.tot/maxCuad*100).toFixed(0)}%;background:${COLORS[i % COLORS.length]}"></div></div></td>
+    </tr>`
+  ).join('');
+
+  // Parroquias
+  const maxPar = Math.max(...DATA.parroquias.map(p => p.tot));
+  document.getElementById('parroquiasBody').innerHTML = DATA.parroquias.map((p, i) =>
+    `<tr>
+      <td><span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:${COLORS[(i+3) % COLORS.length]};margin-right:8px;"></span>${p.nom}</td>
+      <td class="num">${p.tot.toLocaleString()}</td>
+      <td><div class="bar-cell"><div class="bar" style="width:${(p.tot/maxPar*100).toFixed(0)}%;background:${COLORS[(i+3) % COLORS.length]}"></div></div></td>
+    </tr>`
+  ).join('');
+}
+
+// ── DETALLE ──
+function renderDetalle(tramites) {
+  if (!tramites || tramites.length === 0) {
+    document.getElementById('detalleBody').innerHTML = `<tr><td colspan="9" style="text-align:center;padding:30px;color:var(--muted)">Sin trámites para los filtros seleccionados</td></tr>`;
+    return;
+  }
+  document.getElementById('detalleBody').innerHTML = tramites.map(t => {
+    const obs = t.observacion_gestion || '';
+    const obsHtml = obs
+      ? `<div class="obs-content">${escapeHtml(obs.replace(/\n/g, '<br>'))}</div>`
+      : `<span class="obs-empty">(sin observación)</span>`;
+    const fAna = t.fecha_analisis ? t.fecha_analisis.split(' ')[0] : '—';
+    const fPlan = t.fecha_planificacion ? t.fecha_planificacion.split(' ')[0] : '—';
+    const fEje = t.fecha_ejecucion ? t.fecha_ejecucion.split(' ')[0] : '—';
+    return `<tr>
+      <td>${escapeHtml(t.numero_tramite || '—')}</td>
+      <td class="num">${fAna}</td>
+      <td class="num">${fPlan}</td>
+      <td class="num">${fEje}</td>
+      <td>${escapeHtml(t.cuadrilla || '—')}</td>
+      <td>${escapeHtml(t.tipo_solicitud || '—')}</td>
+      <td>${escapeHtml((t.cliente || '').substring(0, 30))}</td>
+      <td>${escapeHtml(t.parroquia || '—')}</td>
+      <td class="obs-cell">${obsHtml}</td>
+    </tr>`;
+  }).join('');
+}
+
+function escapeHtml(text) {
+  const div = document.createElement('div');
+  div.textContent = text;
+  return div.innerHTML;
+}
+
+// ── INIT ──
+cargarDatos();
+</script>
+</body>
+</html>
