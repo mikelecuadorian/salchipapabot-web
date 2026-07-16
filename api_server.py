@@ -919,8 +919,11 @@ class APIHandler(SimpleHTTPRequestHandler):
                 info["load_1m"] = parts[0]
                 info["load_5m"] = parts[1]
                 info["load_15m"] = parts[2]
+            ncpu = os.cpu_count() or 1
+            info["cpu_pct"] = round(float(parts[0]) / ncpu * 100, 1)
         except:
-            pass
+            info["cpu_pct"] = 0
+            info["load_1m"] = "0"
         # RAM
         try:
             with open("/proc/meminfo") as f:
