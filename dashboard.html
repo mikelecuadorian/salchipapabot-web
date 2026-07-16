@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>LaCostaTech · Dashboard</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{--bg:#0a0a0f;--bg2:#111118;--card:#16161e;--card2:#1c1c28;--border:#2a2a3a;--text:#e8e8f0;--text2:#9898b0;--text3:#6868a0;--accent:#6c5ce7;--accent2:#00cec9;--green:#00b894;--yellow:#fdcb6e;--red:#e17055;--blue:#74b9ff;--radius:14px;--r:8px}
+body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);line-height:1.6;padding:24px}
+h1{font-size:1.5rem;font-weight:700;margin-bottom:4px;background:linear-gradient(135deg,#6c5ce7,#00cec9);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+.sub{color:var(--text2);font-size:.85rem;margin-bottom:24px}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:16px;margin-bottom:24px}
+.card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:20px}
+.card h3{font-size:.75rem;text-transform:uppercase;letter-spacing:.5px;color:var(--text3);margin-bottom:12px;font-weight:600}
+.val{font-size:1.8rem;font-weight:700}
+.val.green{color:var(--green)}.val.yellow{color:var(--yellow)}.val.red{color:var(--red)}.val.blue{color:var(--blue)}.val.accent{color:var(--accent)}
+.label{font-size:.75rem;color:var(--text2);margin-top:2px}
+.bar{height:6px;background:var(--bg2);border-radius:4px;margin-top:10px;overflow:hidden}
+.bar-fill{height:100%;border-radius:4px;transition:width .5s}.bar-fill.green{background:var(--green)}.bar-fill.yellow{background:var(--yellow)}.bar-fill.red{background:var(--red)}.bar-fill.accent{background:linear-gradient(90deg,var(--accent),var(--accent2))}
+/* Services */
+.serv-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:12px;margin-bottom:24px}
+.serv-card{background:var(--card);border:1px solid var(--border);border-radius:var(--r);padding:16px;display:flex;align-items:center;gap:14px}
+.serv-icon{width:10px;height:10px;border-radius:50%;flex-shrink:0}.serv-icon.up{background:var(--green);box-shadow:0 0 8px var(--green)}.serv-icon.down{background:var(--red);box-shadow:0 0 8px var(--red)}
+.serv-name{font-size:.85rem;font-weight:500}.serv-pid{font-size:.7rem;color:var(--text3);font-family:'JetBrains Mono',monospace;margin-top:2px}
+/* Crons */
+.cron-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(350px,1fr));gap:12px}
+.cron-card{background:var(--card2);border:1px solid var(--border);border-radius:var(--r);padding:16px}
+.cron-name{font-size:.85rem;font-weight:600;margin-bottom:8px;color:var(--accent2)}
+.cron-row{display:flex;justify-content:space-between;font-size:.75rem;padding:3px 0}
+.cron-label{color:var(--text3)}.cron-val{color:var(--text);font-family:'JetBrains Mono',monospace;font-size:.7rem}
+.cron-ok{color:var(--green)}.cron-err{color:var(--red)}
+.span-2{grid-column:span 2}
+@media(max-width:600px){.span-2{grid-column:span 1}.cron-grid{grid-template-columns:1fr}}
+.pulse{animation:pulse 2s ease-in-out infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.5}}
+.loading{text-align:center;padding:60px;color:var(--text2)}
+</style>
+</head>
+<body>
+<h1>LaCostaTech</h1>
+<p class="sub" id="subtext">Cargando...</p>
+
+<div class="grid" id="stats-grid">
+  <div class="card"><h3>Uptime</h3><div class="val accent" id="uptime">—</div><div class="label" id="hostname"></div></div>
+  <div class="card"><h3>Carga CPU</h3><div class="val blue" id="load">—</div><div class="label">1m / 5m / 15m</div></div>
+  <div class="card"><h3>RAM</h3><div class="val green" id="ram-val">—</div><div class="label" id="ram-label"></div><div class="bar"><div class="bar-fill" id="ram-bar" style="width:0%"></div></div></div>
+  <div class="card"><h3>Disco</h3><div class="val yellow" id="disk-val">—</div><div class="label" id="disk-label"></div><div class="bar"><div class="bar-fill" id="disk-bar" style="width:0%"></div></div></div>
+  <div class="card"><h3>BD Medidores</h3><div class="val accent" id="db-size">—</div><div class="label">SQLite</div></div>
+  <div class="card"><h3>Servicios</h3><div class="val green" id="serv-up">—</div><div class="label" id="serv-label"></div></div>
+</div>
+
+<h2 style="font-size:1rem;font-weight:600;margin-bottom:12px;color:var(--text2)">🟢 Servicios</h2>
+<div class="serv-grid" id="serv-grid"></div>
+
+<h2 style="font-size:1rem;font-weight:600;margin-bottom:12px;color:var(--text2)">⏰ Cron Jobs</h2>
+<div class="cron-grid" id="cron-grid"></div>
+
+<script>
+async function loadData(){
+  try{
+    const r=await fetch('/api/system');
+    const d=await r.json();
+    
+    document.getElementById('subtext').textContent=d.hostname+' · '+new Date().toLocaleString('es-EC',{timeZone:'America/Guayaquil'});
+    
+    // Stats
+    document.getElementById('uptime').textContent=d.uptime;
+    document.getElementById('hostname').textContent=d.hostname;
+    document.getElementById('load').textContent=d.load_1m+' / '+d.load_5m+' / '+d.load_15m;
+    
+    // RAM
+    const rp=d.ram_pct;
+    document.getElementById('ram-val').textContent=Math.round(d.ram_used_mb/1024*10)/10+'/'+Math.round(d.ram_total_mb/1024*10)/10+' GB';
+    document.getElementById('ram-label').textContent=rp+'% usado · '+Math.round(d.ram_avail_mb/1024*10)/10+' GB libre';
+    const rb=document.getElementById('ram-bar');
+    rb.style.width=rp+'%';
+    rb.className='bar-fill '+(rp>80?'red':rp>60?'yellow':'green');
+    document.getElementById('ram-val').className='val '+(rp>80?'red':rp>60?'yellow':'green');
+    
+    // Disk
+    const dp=d.disk_pct;
+    document.getElementById('disk-val').textContent=d.disk_used_gb+'/'+d.disk_total_gb+' GB';
+    document.getElementById('disk-label').textContent=dp+'% usado · '+d.disk_avail_gb+' GB libre';
+    const db=document.getElementById('disk-bar');
+    db.style.width=dp+'%';
+    db.className='bar-fill '+(dp>85?'red':dp>70?'yellow':'green');
+    document.getElementById('disk-val').className='val '+(dp>85?'red':dp>70?'yellow':'green');
+    
+    document.getElementById('db-size').textContent=d.db_size_mb+' MB';
+    
+    // Servicios
+    const up=d.servicios.filter(s=>s.status==='up').length;
+    const total=d.servicios.length;
+    document.getElementById('serv-up').textContent=up+'/'+total;
+    document.getElementById('serv-label').textContent=total-up+' caído'+(total-up!==1?'s':'');
+    if(total-up>0){document.getElementById('serv-up').className='val red';document.getElementById('serv-label').style.color='var(--red)'}
+    else{document.getElementById('serv-up').className='val green';document.getElementById('serv-label').style.color='var(--text2)'}
+    
+    // Servicios grid
+    const sg=document.getElementById('serv-grid');
+    sg.innerHTML=d.servicios.map(s=>
+      '<div class="serv-card"><div class="serv-icon '+(s.status==='up'?'up':'down')+'"></div><div><div class="serv-name">'+s.name+'</div><div class="serv-pid">'+(s.pid?'PID '+s.pid:'—')+'</div></div></div>'
+    ).join('');
+    
+    // Crons
+    const cg=document.getElementById('cron-grid');
+    cg.innerHTML=d.crons.map(c=>{
+      const last=c.last_run||'—';
+      const ok=last.includes('ok');
+      return '<div class="cron-card"><div class="cron-name">'+c.name+'</div>'+
+        '<div class="cron-row"><span class="cron-label">⏱</span><span class="cron-val">'+c.schedule+'</span></div>'+
+        '<div class="cron-row"><span class="cron-label">Próxima</span><span class="cron-val">'+(c.next_run||'—')+'</span></div>'+
+        '<div class="cron-row"><span class="cron-label">Última</span><span class="cron-val '+(ok?'cron-ok':'cron-err')+'">'+last+'</span></div>'+
+        (c.script?'<div class="cron-row"><span class="cron-label">Script</span><span class="cron-val">'+c.script+'</span></div>':'')+
+        (c.mode?'<div class="cron-row"><span class="cron-label">Modo</span><span class="cron-val">'+c.mode+'</span></div>':'')+
+        '</div>';
+    }).join('');
+    
+  }catch(e){
+    document.getElementById('subtext').innerHTML='<span class="red">⚠️ Error al cargar datos</span>';
+  }
+}
+loadData();
+setInterval(loadData,30000);
+</script>
+</body>
+</html>

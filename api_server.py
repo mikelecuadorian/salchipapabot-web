@@ -886,6 +886,8 @@ class APIHandler(SimpleHTTPRequestHandler):
             self.send_json(get_bodega_resumen(d, h))
         elif path == "/api/bodega/catalogos":
             self.send_json(get_bodega_catalogos())
+        elif path == "/api/system":
+            self.send_json(self.get_system_info())
         else:
             # Servir archivos estáticos desde STATIC_DIR
             super().do_GET()
@@ -896,6 +898,122 @@ class APIHandler(SimpleHTTPRequestHandler):
         self.send_header("Access-Control-Allow-Origin", "*")
         self.end_headers()
         self.wfile.write(json.dumps(data, ensure_ascii=False).encode("utf-8"))
+
+    def get_system_info(self):
+        import subprocess, os
+        info = {}
+        # Uptime
+        try:
+            with open("/proc/uptime") as f:
+                uptime_sec = float(f.read().split()[0])
+                days = int(uptime_sec // 86400)
+                hours = int((uptime_sec % 86400) // 3600)
+                mins = int((uptime_sec % 3600) // 60)
+                info["uptime"] = f"{days}d {hours}h {mins}m"
+        except:
+            info["uptime"] = "N/A"
+        # Carga CPU
+        try:
+            with open("/proc/loadavg") as f:
+                parts = f.read().split()
+                info["load_1m"] = parts[0]
+                info["load_5m"] = parts[1]
+                info["load_15m"] = parts[2]
+        except:
+            pass
+        # RAM
+        try:
+            with open("/proc/meminfo") as f:
+                mem = {}
+                for line in f:
+                    for k in ["MemTotal", "MemFree", "MemAvailable", "Buffers", "Cached"]:
+                        if line.startswith(k + ":"):
+                            mem[k.lower()] = int(line.split()[1]) // 1024
+                info["ram_total_mb"] = mem.get("memtotal", 0)
+                info["ram_free_mb"] = mem.get("memfree", 0)
+                info["ram_avail_mb"] = mem.get("memavailable", 0)
+                info["ram_buffers_mb"] = mem.get("buffers", 0) + mem.get("cached", 0)
+                used = info["ram_total_mb"] - info["ram_avail_mb"]
+                info["ram_used_mb"] = used
+                info["ram_pct"] = round(used / info["ram_total_mb"] * 100, 1) if info["ram_total_mb"] else 0
+        except:
+            pass
+        # Disco
+        try:
+            st = os.statvfs("/data/data/com.termux/files/home/")
+            total = st.f_blocks * st.f_frsize
+            free = st.f_bfree * st.f_frsize
+            avail = st.f_bavail * st.f_frsize
+            used = total - free
+            info["disk_total_gb"] = round(total / (1024**3), 1)
+            info["disk_used_gb"] = round(used / (1024**3), 1)
+            info["disk_avail_gb"] = round(avail / (1024**3), 1)
+            info["disk_pct"] = round(used / total * 100, 1) if total else 0
+        except:
+            pass
+        # Servicios runsv
+        try:
+            r = subprocess.run(["sv", "status"] + [
+                f"/data/data/com.termux/files/usr/var/service/{s}"
+                for s in ["salchipapabot", "papafritabot", "burgerbot", "servidor_web", "sshd_custom", "cloudflared", "hermes"]
+            ], capture_output=True, text=True, timeout=5)
+            servicios = []
+            for line in r.stdout.strip().split("\n"):
+                if not line.strip():
+                    continue
+                parts = line.split(":", 1)
+                status = parts[0].strip()
+                rest = parts[1] if len(parts) > 1 else ""
+                name = rest.split(":")[0].strip().split("/")[-1] if ":" in rest else ""
+                pid = ""
+                if "(pid" in rest:
+                    pid = rest.split("(pid")[1].split(")")[0].strip()
+                servicios.append({"name": name, "status": "up" if status == "run" else "down", "pid": pid})
+            info["servicios"] = servicios
+        except:
+            info["servicios"] = []
+        # BD
+        try:
+            db_size = os.path.getsize("/data/data/com.termux/files/home/salchipapabot/gestion_medidores.db")
+            info["db_size_mb"] = round(db_size / (1024*1024), 1)
+        except:
+            info["db_size_mb"] = 0
+        # Hostname
+        try:
+            info["hostname"] = os.uname().nodename
+        except:
+            info["hostname"] = "unknown"
+        # Cron jobs
+        try:
+            r = subprocess.run(["hermes", "cron", "list"], capture_output=True, text=True, timeout=10)
+            crons = []
+            current = {}
+            for line in r.stdout.split("\n"):
+                line_stripped = line.strip()
+                if line_stripped.startswith("Name:"):
+                    current["name"] = line_stripped.split(":", 1)[1].strip()
+                elif line_stripped.startswith("Schedule:"):
+                    current["schedule"] = line_stripped.split(":", 1)[1].strip()
+                elif line_stripped.startswith("Next run:"):
+                    current["next_run"] = line_stripped.split(":", 1)[1].strip()
+                elif line_stripped.startswith("Last run:"):
+                    current["last_run"] = line_stripped.split(":", 1)[1].strip()
+                elif line_stripped.startswith("Mode:"):
+                    current["mode"] = line_stripped.split(":", 1)[1].strip()
+                elif line_stripped.startswith("Script:"):
+                    current["script"] = line_stripped.split(":", 1)[1].strip()
+                elif line_stripped.startswith("Deliver:"):
+                    current["deliver"] = line_stripped.split(":", 1)[1].strip()
+                elif "active" in line_stripped or "paused" in line_stripped:
+                    if current.get("name"):
+                        crons.append(current)
+                    current = {}
+            if current.get("name"):
+                crons.append(current)
+            info["crons"] = crons
+        except:
+            info["crons"] = []
+        return info
     
     def translate_path(self, path):
         # Forzar que los archivos se sirvan desde STATIC_DIR
@@ -923,6 +1041,8 @@ def main():
     print(f"   GET /api/bodega/cuadrillas?desde=X&hasta=Y")
     print(f"   GET /api/bodega/resumen?desde=X&hasta=Y")
     print(f"   GET /api/bodega/catalogos")
+    print(f"   GET /api/system (estado del servidor)")
+    print(f"   GET /dashboard.html (todo-en-uno)")
     print(f"   GET / (archivos estáticos)")
     try:
         server.serve_forever()
