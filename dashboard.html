@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>LaCostaTech · Dashboard</title>
+<title>Servidor Salchipapa · Dashboard</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
 <style>
@@ -35,16 +35,18 @@ h1{font-size:1.5rem;font-weight:700;margin-bottom:4px;background:linear-gradient
 </style>
 </head>
 <body>
-<h1>LaCostaTech</h1>
+<h1>Servidor Salchipapa</h1>
 <p class="sub" id="subtext">Cargando...</p>
 
 <div class="grid" id="stats-grid">
-  <div class="card"><h3>Uptime</h3><div class="val accent" id="uptime">—</div><div class="label" id="hostname"></div></div>
+  <div class="card"><h3>📱 Dispositivo</h3><div class="val accent" id="uptime">—</div><div class="label">Encendido desde (kernel)</div></div>
+  <div class="card"><h3>⚙️ Android</h3><div class="val accent" id="android-uptime">—</div><div class="label">Servicios del sistema</div></div>
+  <div class="card"><h3>🌐 Servidor web</h3><div class="val accent" id="server-uptime">—</div><div class="label" id="hostname">API corriendo</div></div>
   <div class="card"><h3>CPU</h3><div class="val blue" id="cpu-val">—</div><div class="label" id="cpu-label"></div><div class="bar"><div class="bar-fill" id="cpu-bar" style="width:0%"></div></div></div>
   <div class="card"><h3>RAM</h3><div class="val green" id="ram-val">—</div><div class="label" id="ram-label"></div><div class="bar"><div class="bar-fill" id="ram-bar" style="width:0%"></div></div></div>
   <div class="card"><h3>Disco</h3><div class="val yellow" id="disk-val">—</div><div class="label" id="disk-label"></div><div class="bar"><div class="bar-fill" id="disk-bar" style="width:0%"></div></div></div>
   <div class="card"><h3>BD Medidores</h3><div class="val accent" id="db-size">—</div><div class="label">SQLite</div></div>
-  <div class="card"><h3>🔋 Batería</h3><div class="val orange" id="battery">N/A</div><div class="label">No accesible desde PRoot</div></div>
+  <div class="card"><h3>🔋 Batería</h3><div class="val" id="battery-val">—</div><div class="label" id="battery-label">Cargando...</div></div>
   <div class="card"><h3>Servicios</h3><div class="val green" id="serv-up">—</div><div class="label" id="serv-label"></div></div>
 </div>
 
@@ -64,7 +66,12 @@ async function loadData(){
     
     // Uptime
     document.getElementById('uptime').textContent=d.uptime;
-    document.getElementById('hostname').textContent=d.hostname;
+    
+    // Android uptime
+    document.getElementById('android-uptime').textContent=d.android_uptime||'N/A';
+    
+    // Server uptime
+    document.getElementById('server-uptime').textContent=d.server_uptime||'N/A';
     
     // CPU %
     const cp=d.cpu_pct||0;
@@ -94,6 +101,20 @@ async function loadData(){
     document.getElementById('disk-val').className='val '+(dp>85?'red':dp>70?'yellow':'green');
     
     document.getElementById('db-size').textContent=d.db_size_mb+' MB';
+    
+    // Batería
+    const bv=document.getElementById('battery-val');
+    const bl=document.getElementById('battery-label');
+    if(d.battery_pct!==undefined){
+      bv.textContent=d.battery_pct+'%';
+      bv.className='val '+(d.battery_pct<20?'red':d.battery_pct<40?'orange':d.battery_pct<60?'yellow':'green');
+      const status=d.battery_status==='DISCHARGING'?'⬇️ Descargando':d.battery_status==='CHARGING'?'⚡ Cargando':d.battery_status;
+      bl.textContent=status+(d.battery_plugged&&d.battery_plugged!=='UNPLUGGED'?' · '+d.battery_plugged:'')+' · '+d.battery_temp+'°C';
+    }else{
+      bv.textContent='N/A';
+      bv.className='val orange';
+      bl.textContent='No disponible';
+    }
     
     // Servicios count
     const up=d.servicios.filter(s=>s.status==='up').length;

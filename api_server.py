@@ -7,12 +7,14 @@ import json
 import sqlite3
 import os
 import sys
+import time
 import urllib.parse
 from http.server import HTTPServer, SimpleHTTPRequestHandler
 from datetime import datetime, timedelta
 
 DB_PATH = "/data/data/com.termux/files/home/salchipapabot/gestion_medidores.db"
 STATIC_DIR = os.path.dirname(os.path.abspath(__file__))
+SERVER_START = time.time()  # momento en que arrancó el servidor web
 
 
 def query_db(sql, params=None):
@@ -558,8 +560,6 @@ MATERIAL_COLS = {
     'acometida_mts': 'Acometida (mts)',
     'alimentador_salida_mts': 'Alimentador salida (mts)',
     'caja_dist_mts': 'Caja distribución (mts)',
-    'cant_caja': 'Cantidad cajas',
-    'med_nue_cant_caja': 'Caja medidor nuevo',
     'med_ret_cant_caja': 'Caja medidor retirado',
     'sello_caja_prot_u': 'Sello caja protección',
     'sello_cuarto_transf_u': 'Sello cuarto transformador',
@@ -589,6 +589,7 @@ def unpivot_materiales(desde=None, hasta=None, cuadrilla=None):
     # Traer datos base
     rows = query_db(f"""
         SELECT numero_tramite, cuadrilla, fecha_ejecucion, cliente, parroquia,
+               med_nue_caja,
                {', '.join(MATERIAL_COLS.keys())}
         FROM gestion_tramites
         WHERE {where_clause}
@@ -598,13 +599,18 @@ def unpivot_materiales(desde=None, hasta=None, cuadrilla=None):
     # Despivotar
     materiales = []
     for r in rows:
+        # Primero: materiales estándar (columnas numéricas)
         for col, nombre in MATERIAL_COLS.items():
             val = r.get(col)
-            if val is not None and isinstance(val, (int, float)) and 0 < val < MAX_VALID:
+            if val is not None and val != '':
+                if isinstance(val, (int, float)) and 0 < val < MAX_VALID:
+                    cantidad = int(val)
+                else:
+                    continue
                 materiales.append({
                     "material": nombre,
                     "columna": col,
-                    "cantidad": int(val),
+                    "cantidad": cantidad,
                     "tipo": "Instalado",
                     "cuadrilla": r.get("cuadrilla", ""),
                     "fecha": r.get("fecha_ejecucion", ""),
@@ -612,6 +618,21 @@ def unpivot_materiales(desde=None, hasta=None, cuadrilla=None):
                     "tramite": r.get("numero_tramite", ""),
                     "parroquia": r.get("parroquia", ""),
                 })
+
+        # Segundo: med_nue_caja (tipo de caja instalada)
+        caja_tipo = r.get("med_nue_caja")
+        if caja_tipo is not None and str(caja_tipo).strip():
+            materiales.append({
+                "material": f"Caja medidor: {str(caja_tipo).strip()}",
+                "columna": "med_nue_caja",
+                "cantidad": 1,
+                "tipo": "Instalado",
+                "cuadrilla": r.get("cuadrilla", ""),
+                "fecha": r.get("fecha_ejecucion", ""),
+                "cliente": r.get("cliente", ""),
+                "tramite": r.get("numero_tramite", ""),
+                "parroquia": r.get("parroquia", ""),
+            })
     return materiales
 
 
@@ -674,7 +695,8 @@ def get_bodega_retirados(desde, hasta, cuadrilla):
         ORDER BY cantidad DESC
     """, params)
 
-    total_materiales = sum(r["cantidad"] for r in rows) if rows else 0
+    rows = [r for r in rows if r.get("material") is not None] if rows and not isinstance(rows, dict) else rows
+    total_materiales = sum(r["cantidad"] for r in rows if r["cantidad"] is not None) if rows and not isinstance(rows, dict) else 0
 
     # Total de trámites distintos
     tramites_rows = query_db(f"""
@@ -902,16 +924,48 @@ class APIHandler(SimpleHTTPRequestHandler):
     def get_system_info(self):
         import subprocess, os
         info = {}
-        # Uptime
+        # Uptimes
         try:
-            with open("/proc/uptime") as f:
-                uptime_sec = float(f.read().split()[0])
-                days = int(uptime_sec // 86400)
-                hours = int((uptime_sec % 86400) // 3600)
-                mins = int((uptime_sec % 3600) // 60)
-                info["uptime"] = f"{days}d {hours}h {mins}m"
+            # CLOCK_BOOTTIME da el uptime real del dispositivo
+            uptime_sec = time.clock_gettime(time.CLOCK_BOOTTIME)
+            days = int(uptime_sec // 86400)
+            hours = int((uptime_sec % 86400) // 3600)
+            mins = int((uptime_sec % 3600) // 60)
+            info["uptime"] = f"{days}d {hours}h {mins}m"
+        except Exception as e:
+            # Fallback a /proc/uptime
+            try:
+                with open("/proc/uptime") as f:
+                    uptime_sec = float(f.read().split()[0])
+                    days = int(uptime_sec // 86400)
+                    hours = int((uptime_sec % 86400) // 3600)
+                    mins = int((uptime_sec % 3600) // 60)
+                    info["uptime"] = f"{days}d {hours}h {mins}m"
+            except:
+                info["uptime"] = "N/A"
+        # Android uptime
+        try:
+            import subprocess
+            r = subprocess.run(["getprop", "sys.system_server.start_uptime"], capture_output=True, text=True, timeout=3)
+            if r.returncode == 0 and r.stdout.strip():
+                sec = int(r.stdout.strip())
+                d = int(sec // 86400)
+                h = int((sec % 86400) // 3600)
+                m = int((sec % 3600) // 60)
+                info["android_uptime"] = f"{d}d {h}h {m}m"
+            else:
+                info["android_uptime"] = "N/A"
         except:
-            info["uptime"] = "N/A"
+            info["android_uptime"] = "N/A"
+        # Server uptime
+        try:
+            sec = time.time() - SERVER_START
+            d = int(sec // 86400)
+            h = int((sec % 86400) // 3600)
+            m = int((sec % 3600) // 60)
+            info["server_uptime"] = f"{d}d {h}h {m}m"
+        except:
+            info["server_uptime"] = "N/A"
         # Carga CPU
         try:
             with open("/proc/loadavg") as f:
@@ -954,24 +1008,31 @@ class APIHandler(SimpleHTTPRequestHandler):
             info["disk_pct"] = round(used / total * 100, 1) if total else 0
         except:
             pass
-        # Servicios runsv
+        # Servicios runsv - leer directo de supervise/stat + verificar PID
         try:
-            r = subprocess.run(["sv", "status"] + [
-                f"/data/data/com.termux/files/usr/var/service/{s}"
-                for s in ["salchipapabot", "papafritabot", "burgerbot", "servidor_web", "sshd_custom", "cloudflared", "hermes"]
-            ], capture_output=True, text=True, timeout=5)
+            SVDIR = "/data/data/com.termux/files/usr/var/service"
+            svcs = ["salchipapabot", "papafritabot", "burgerbot", "servidor_web", "sshd_custom", "cloudflared", "hermes"]
             servicios = []
-            for line in r.stdout.strip().split("\n"):
-                if not line.strip():
-                    continue
-                parts = line.split(":", 1)
-                status = parts[0].strip()
-                rest = parts[1] if len(parts) > 1 else ""
-                name = rest.split(":")[0].strip().split("/")[-1] if ":" in rest else ""
+            for s in svcs:
+                stat_path = f"{SVDIR}/{s}/supervise/stat"
+                pid_path = f"{SVDIR}/{s}/supervise/pid"
+                estado = "down"
                 pid = ""
-                if "(pid" in rest:
-                    pid = rest.split("(pid")[1].split(")")[0].strip()
-                servicios.append({"name": name, "status": "up" if status == "run" else "down", "pid": pid})
+                try:
+                    with open(stat_path) as f:
+                        raw = f.read().strip()
+                    with open(pid_path) as f:
+                        pid = f.read().strip()
+                    # Verificar que el PID realmente esté vivo
+                    if pid and raw == "run":
+                        try:
+                            os.kill(int(pid), 0)
+                            estado = "up"
+                        except OSError:
+                            estado = "down"
+                except:
+                    pass
+                servicios.append({"name": s, "status": estado, "pid": pid})
             info["servicios"] = servicios
         except:
             info["servicios"] = []
@@ -988,7 +1049,7 @@ class APIHandler(SimpleHTTPRequestHandler):
             info["hostname"] = "unknown"
         # Cron jobs
         try:
-            r = subprocess.run(["hermes", "cron", "list"], capture_output=True, text=True, timeout=10)
+            r = subprocess.run(["/usr/local/lib/hermes-agent/venv/bin/hermes", "cron", "list"], capture_output=True, text=True, timeout=10)
             crons = []
             current = {}
             for line in r.stdout.split("\n"):
@@ -1014,8 +1075,28 @@ class APIHandler(SimpleHTTPRequestHandler):
             if current.get("name"):
                 crons.append(current)
             info["crons"] = crons
-        except:
+            info["_cron_debug"] = f"parsed={len(crons)} lines={len(r.stdout.split(chr(10)))} rc={r.returncode}"
+        except Exception as e:
             info["crons"] = []
+            info["_cron_debug"] = f"error: {e}"
+        # Batería (Termux:API) - cacheado 60s con timeout
+        try:
+            now = time.time()
+            if not hasattr(self, '_battery_cache_time') or now - self._battery_cache_time > 60:
+                self._battery_cache = {"battery": "N/A"}
+                r = subprocess.run(["timeout", "3", "termux-battery-status"], capture_output=True, text=True, timeout=5)
+                if r.returncode == 0 and r.stdout.strip():
+                    bat = json.loads(r.stdout)
+                    self._battery_cache = {
+                        "battery_pct": bat.get("percentage", 0),
+                        "battery_status": bat.get("status", "N/A"),
+                        "battery_temp": bat.get("temperature", 0),
+                        "battery_plugged": bat.get("plugged", "N/A"),
+                    }
+                self._battery_cache_time = now
+            info.update(self._battery_cache)
+        except:
+            info["battery"] = "N/A"
         return info
     
     def translate_path(self, path):

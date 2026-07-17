@@ -17,3 +17,11 @@ Thumbs.db
 
 # Large generated files (PDFs can be regenerated)
 mis_imagenes.pdf
+
+# Generated reports (Excel / CSV exports)
+campos_gestion_tramites.xlsx
+campos_gestion_tramites.csv
+
+# Python cache
+__pycache__/
+*.pyc
