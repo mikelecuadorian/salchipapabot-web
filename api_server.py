@@ -341,30 +341,42 @@ def get_reclamos_data():
     """Retorna todos los datos para el dashboard de RECL"""
     where_extra = "AND codigo_cliente = 'RECL'"
 
-    # 1. KPIs
-    total = query_db(f"SELECT COUNT(*) as total FROM gestion_tramites WHERE codigo_cliente = 'RECL'")
-    ejecutados = query_db(f"SELECT COUNT(*) as total FROM gestion_tramites WHERE codigo_cliente = 'RECL' AND fecha_ejecucion IS NOT NULL AND fecha_ejecucion != ''")
-    pendientes = query_db(f"SELECT COUNT(*) as total FROM gestion_tramites WHERE codigo_cliente = 'RECL' AND (fecha_ejecucion IS NULL OR fecha_ejecucion = '')")
-    dias_prom = query_db(f"SELECT round(avg(dias_transcurridos),1) as prom FROM gestion_tramites WHERE codigo_cliente = 'RECL' AND dias_transcurridos IS NOT NULL")
+    # 1. KPIs (basados en recorrido_cuadrillas JOIN gestion_tramites para
+    #    consistencia con la tabla de detalle)
+    total = query_db(f"""SELECT COUNT(*) as total FROM recorrido_cuadrillas rc
+        INNER JOIN gestion_tramites gt ON rc.numero_tramite = gt.numero_tramite
+        WHERE gt.codigo_cliente = 'RECL'""")
+    ejecutados = query_db(f"""SELECT COUNT(*) as total FROM recorrido_cuadrillas rc
+        INNER JOIN gestion_tramites gt ON rc.numero_tramite = gt.numero_tramite
+        WHERE gt.codigo_cliente = 'RECL' AND rc.fecha_ejecucion IS NOT NULL AND rc.fecha_ejecucion != ''""")
+    pendientes = query_db(f"""SELECT COUNT(*) as total FROM recorrido_cuadrillas rc
+        INNER JOIN gestion_tramites gt ON rc.numero_tramite = gt.numero_tramite
+        WHERE gt.codigo_cliente = 'RECL' AND (rc.fecha_ejecucion IS NULL OR rc.fecha_ejecucion = '')""")
+    dias_prom = query_db(f"""SELECT round(avg(rc.dias_transcurridos),1) as prom FROM recorrido_cuadrillas rc
+        INNER JOIN gestion_tramites gt ON rc.numero_tramite = gt.numero_tramite
+        WHERE gt.codigo_cliente = 'RECL' AND rc.dias_transcurridos IS NOT NULL""")
 
     tot = total[0]["total"] if total else 0
     eje = ejecutados[0]["total"] if ejecutados else 0
     pen = pendientes[0]["total"] if pendientes else 0
     prom = dias_prom[0]["prom"] if dias_prom and dias_prom[0]["prom"] else 0
 
-    # 2. Cuadrillas disponibles (para filtro)
+    # 2. Cuadrillas disponibles (para filtro) - desde recorrido_cuadrillas
     cuadrillas = query_db(f"""
-        SELECT cuadrilla, COUNT(*) as total FROM gestion_tramites
-        WHERE codigo_cliente = 'RECL' AND cuadrilla IS NOT NULL AND cuadrilla != ''
-        GROUP BY cuadrilla ORDER BY total DESC
+        SELECT rc.cuadrilla, COUNT(*) as total FROM recorrido_cuadrillas rc
+        INNER JOIN gestion_tramites gt ON rc.numero_tramite = gt.numero_tramite
+        WHERE gt.codigo_cliente = 'RECL' AND rc.cuadrilla IS NOT NULL AND rc.cuadrilla != ''
+        GROUP BY rc.cuadrilla ORDER BY total DESC
     """)
     cuadrillas_list = [{"nom": r["cuadrilla"], "tot": r["total"]} for r in cuadrillas]
 
-    # 3. Días disponibles (para filtro) - incluir hoy siempre
+    # 3. Días disponibles (para filtro) - incluir hoy siempre - desde recorrido_cuadrillas
     dias = query_db(f"""
-        SELECT date(fecha_ejecucion) as dia, COUNT(*) as total
-        FROM gestion_tramites WHERE codigo_cliente = 'RECL'
-        AND fecha_ejecucion IS NOT NULL AND fecha_ejecucion != ''
+        SELECT date(rc.fecha_ejecucion) as dia, COUNT(*) as total
+        FROM recorrido_cuadrillas rc
+        INNER JOIN gestion_tramites gt ON rc.numero_tramite = gt.numero_tramite
+        WHERE gt.codigo_cliente = 'RECL'
+        AND rc.fecha_ejecucion IS NOT NULL AND rc.fecha_ejecucion != ''
         GROUP BY dia ORDER BY dia DESC
     """)
     dias_list = [{"dia": r["dia"], "tot": r["total"]} for r in dias]
@@ -374,11 +386,13 @@ def get_reclamos_data():
     if not any(d["dia"] == hoy_str for d in dias_list):
         dias_list.insert(0, {"dia": hoy_str, "tot": 0})
 
-    # 4. Tendencia mensual (ejecutados por mes)
+    # 4. Tendencia mensual (ejecutados por mes) - desde recorrido_cuadrillas
     mensual = query_db(f"""
-        SELECT strftime('%Y-%m', fecha_ejecucion) as mes, COUNT(*) as total
-        FROM gestion_tramites WHERE codigo_cliente = 'RECL'
-        AND fecha_ejecucion IS NOT NULL AND fecha_ejecucion != ''
+        SELECT strftime('%Y-%m', rc.fecha_ejecucion) as mes, COUNT(*) as total
+        FROM recorrido_cuadrillas rc
+        INNER JOIN gestion_tramites gt ON rc.numero_tramite = gt.numero_tramite
+        WHERE gt.codigo_cliente = 'RECL'
+        AND rc.fecha_ejecucion IS NOT NULL AND rc.fecha_ejecucion != ''
         GROUP BY mes ORDER BY mes
     """)
     meses_labels = []
@@ -388,11 +402,13 @@ def get_reclamos_data():
         meses_labels.append(dt.strftime("%b %y").capitalize())
         meses_data.append(r["total"])
 
-    # 5. Tendencia mensual analizados
+    # 5. Tendencia mensual analizados - desde recorrido_cuadrillas
     mensual_anal = query_db(f"""
-        SELECT strftime('%Y-%m', fecha_analisis) as mes, COUNT(*) as total
-        FROM gestion_tramites WHERE codigo_cliente = 'RECL'
-        AND fecha_analisis IS NOT NULL AND fecha_analisis != ''
+        SELECT strftime('%Y-%m', rc.fecha_analisis) as mes, COUNT(*) as total
+        FROM recorrido_cuadrillas rc
+        INNER JOIN gestion_tramites gt ON rc.numero_tramite = gt.numero_tramite
+        WHERE gt.codigo_cliente = 'RECL'
+        AND rc.fecha_analisis IS NOT NULL AND rc.fecha_analisis != ''
         GROUP BY mes ORDER BY mes
     """)
     meses_anal_labels = []
@@ -402,17 +418,21 @@ def get_reclamos_data():
         meses_anal_labels.append(dt.strftime("%b %y").capitalize())
         meses_anal_data.append(r["total"])
 
-    # 6. Últimos 7 días
+    # 6. Últimos 7 días - desde recorrido_cuadrillas
     weekly = query_db(f"""
-        SELECT date(fecha_ejecucion) as dia, COUNT(*) as total
-        FROM gestion_tramites WHERE codigo_cliente = 'RECL'
-        AND fecha_ejecucion >= date('now', 'localtime', '-7 days')
+        SELECT date(rc.fecha_ejecucion) as dia, COUNT(*) as total
+        FROM recorrido_cuadrillas rc
+        INNER JOIN gestion_tramites gt ON rc.numero_tramite = gt.numero_tramite
+        WHERE gt.codigo_cliente = 'RECL'
+        AND rc.fecha_ejecucion >= date('now', 'localtime', '-7 days')
         GROUP BY dia ORDER BY dia
     """)
     weekly_anal = query_db(f"""
-        SELECT date(fecha_analisis) as dia, COUNT(*) as total
-        FROM gestion_tramites WHERE codigo_cliente = 'RECL'
-        AND fecha_analisis >= date('now', 'localtime', '-7 days')
+        SELECT date(rc.fecha_analisis) as dia, COUNT(*) as total
+        FROM recorrido_cuadrillas rc
+        INNER JOIN gestion_tramites gt ON rc.numero_tramite = gt.numero_tramite
+        WHERE gt.codigo_cliente = 'RECL'
+        AND rc.fecha_analisis >= date('now', 'localtime', '-7 days')
         GROUP BY dia ORDER BY dia
     """)
     weekly_dates = []
@@ -429,19 +449,21 @@ def get_reclamos_data():
         weekly_eje.append(e)
         weekly_ana.append(a)
 
-    # 7. Tipos de reclamo
+    # 7. Tipos de reclamo - desde recorrido_cuadrillas
     tipos = query_db(f"""
-        SELECT tipo_solicitud, COUNT(*) as total FROM gestion_tramites
-        WHERE codigo_cliente = 'RECL' AND tipo_solicitud IS NOT NULL
-        GROUP BY tipo_solicitud ORDER BY total DESC
+        SELECT rc.tipo_solicitud, COUNT(*) as total FROM recorrido_cuadrillas rc
+        INNER JOIN gestion_tramites gt ON rc.numero_tramite = gt.numero_tramite
+        WHERE gt.codigo_cliente = 'RECL' AND rc.tipo_solicitud IS NOT NULL
+        GROUP BY rc.tipo_solicitud ORDER BY total DESC
     """)
     tipos_list = [{"nom": r["tipo_solicitud"], "tot": r["total"]} for r in tipos]
 
-    # 8. Parroquias
+    # 8. Parroquias - desde recorrido_cuadrillas
     parroquias = query_db(f"""
-        SELECT parroquia, COUNT(*) as total FROM gestion_tramites
-        WHERE codigo_cliente = 'RECL' AND parroquia IS NOT NULL AND parroquia != ''
-        GROUP BY parroquia ORDER BY total DESC
+        SELECT rc.parroquia, COUNT(*) as total FROM recorrido_cuadrillas rc
+        INNER JOIN gestion_tramites gt ON rc.numero_tramite = gt.numero_tramite
+        WHERE gt.codigo_cliente = 'RECL' AND rc.parroquia IS NOT NULL AND rc.parroquia != ''
+        GROUP BY rc.parroquia ORDER BY total DESC
     """)
     parroquias_list = [{"nom": r["parroquia"], "tot": r["total"]} for r in parroquias]
 
