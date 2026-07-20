@@ -514,16 +514,21 @@ def get_reclamos_data():
     }
 
 
-def get_reclamos_detalle(dia=None, cuadrilla=None):
-    """Retorna la lista detallada de trámites RECL con observacion_gestion, filtrable"""
+def get_reclamos_detalle(dia=None, cuadrilla=None, desde=None, hasta=None):
+    """Retorna la lista detallada de trámites RECL con observacion_gestion, filtrable
+    por dia exacto O rango de fechas (desde/hasta) sobre rc.fecha_ejecucion"""
     where = ["gt.codigo_cliente = 'RECL'"]
 
     if dia:
-        where.append(f"date(gt.fecha_ejecucion) = '{dia}'")
+        where.append(f"date(rc.fecha_ejecucion) = '{dia}'")
+    if desde:
+        where.append(f"date(rc.fecha_ejecucion) >= '{desde}'")
+    if hasta:
+        where.append(f"date(rc.fecha_ejecucion) <= '{hasta}'")
     if cuadrilla:
         # Escape simple para SQL
         c = cuadrilla.replace("'", "''")
-        where.append(f"gt.cuadrilla = '{c}'")
+        where.append(f"rc.cuadrilla = '{c}'")
 
     where_clause = " AND ".join(where)
 
@@ -531,24 +536,36 @@ def get_reclamos_detalle(dia=None, cuadrilla=None):
         SELECT gt.numero_tramite,
                rc.fecha_analisis,
                rc.fecha_planificacion,
-               gt.fecha_ejecucion,
-               gt.cuadrilla, gt.tipo_solicitud,
+               rc.fecha_ejecucion,
+               rc.cuadrilla, rc.tipo_solicitud,
                gt.observacion_gestion, gt.estado, gt.cliente, gt.direccion,
-               gt.parroquia, gt.dias_transcurridos
+               rc.parroquia, rc.dias_transcurridos
         FROM gestion_tramites gt
         INNER JOIN recorrido_cuadrillas rc ON gt.numero_tramite = rc.numero_tramite
         WHERE {where_clause}
-        ORDER BY rc.fecha_analisis DESC, gt.fecha_ejecucion DESC
+        ORDER BY rc.fecha_analisis DESC, rc.fecha_ejecucion DESC
         LIMIT 200
     """)
 
-    # ── KPIs filtrados (respetan los mismos filtros de dia/cuadrilla) ──
-    total_f = query_db(f"SELECT COUNT(*) as t FROM gestion_tramites gt WHERE {where_clause}")
-    eje_f = query_db(f"SELECT COUNT(*) as t FROM gestion_tramites gt WHERE {where_clause} AND gt.fecha_ejecucion IS NOT NULL AND gt.fecha_ejecucion != ''")
-    pen_f = query_db(f"SELECT COUNT(*) as t FROM gestion_tramites gt WHERE {where_clause} AND (gt.fecha_ejecucion IS NULL OR gt.fecha_ejecucion = '')")
-    prom_f = query_db(f"SELECT round(avg(gt.dias_transcurridos),1) as p FROM gestion_tramites gt WHERE {where_clause} AND gt.dias_transcurridos IS NOT NULL")
-    cuad_f = query_db(f"SELECT COUNT(DISTINCT gt.cuadrilla) as c FROM gestion_tramites gt WHERE {where_clause} AND gt.cuadrilla IS NOT NULL AND gt.cuadrilla != ''")
-    parr_f = query_db(f"SELECT COUNT(DISTINCT gt.parroquia) as c FROM gestion_tramites gt WHERE {where_clause} AND gt.parroquia IS NOT NULL AND gt.parroquia != ''")
+    # ── KPIs filtrados (respetan los mismos filtros) ──
+    total_f = query_db(f"SELECT COUNT(*) as t FROM recorrido_cuadrillas rc INNER JOIN gestion_tramites gt ON rc.numero_tramite = gt.numero_tramite WHERE {where_clause}")
+    # EJECUTADOS usa gestion_tramites directo (solo esa tarjeta) — reconstruir clausula con gt.
+    where_gt = ["gt.codigo_cliente = 'RECL'"]
+    if dia:
+        where_gt.append(f"date(gt.fecha_ejecucion) = '{dia}'")
+    if desde:
+        where_gt.append(f"date(gt.fecha_ejecucion) >= '{desde}'")
+    if hasta:
+        where_gt.append(f"date(gt.fecha_ejecucion) <= '{hasta}'")
+    if cuadrilla:
+        c = cuadrilla.replace("'", "''")
+        where_gt.append(f"gt.cuadrilla = '{c}'")
+    where_clause_gt = " AND ".join(where_gt)
+    eje_f = query_db(f"SELECT COUNT(*) as t FROM gestion_tramites gt WHERE {where_clause_gt} AND gt.fecha_ejecucion IS NOT NULL AND gt.fecha_ejecucion != ''")
+    pen_f = query_db(f"SELECT COUNT(*) as t FROM recorrido_cuadrillas rc INNER JOIN gestion_tramites gt ON rc.numero_tramite = gt.numero_tramite WHERE {where_clause} AND (rc.fecha_ejecucion IS NULL OR rc.fecha_ejecucion = '')")
+    prom_f = query_db(f"SELECT round(avg(rc.dias_transcurridos),1) as p FROM recorrido_cuadrillas rc INNER JOIN gestion_tramites gt ON rc.numero_tramite = gt.numero_tramite WHERE {where_clause} AND rc.dias_transcurridos IS NOT NULL")
+    cuad_f = query_db(f"SELECT COUNT(DISTINCT rc.cuadrilla) as c FROM recorrido_cuadrillas rc INNER JOIN gestion_tramites gt ON rc.numero_tramite = gt.numero_tramite WHERE {where_clause} AND rc.cuadrilla IS NOT NULL AND rc.cuadrilla != ''")
+    parr_f = query_db(f"SELECT COUNT(DISTINCT rc.parroquia) as c FROM recorrido_cuadrillas rc INNER JOIN gestion_tramites gt ON rc.numero_tramite = gt.numero_tramite WHERE {where_clause} AND rc.parroquia IS NOT NULL AND rc.parroquia != ''")
 
     tot_f = total_f[0]["t"] if total_f else 0
     eje_f_v = eje_f[0]["t"] if eje_f else 0
@@ -937,7 +954,9 @@ class APIHandler(SimpleHTTPRequestHandler):
             qs = urllib.parse.parse_qs(parsed.query)
             dia = qs.get("dia", [None])[0]
             cuadrilla = qs.get("cuadrilla", [None])[0]
-            self.send_json(get_reclamos_detalle(dia, cuadrilla))
+            desde = qs.get("desde", [None])[0]
+            hasta = qs.get("hasta", [None])[0]
+            self.send_json(get_reclamos_detalle(dia, cuadrilla, desde, hasta))
         elif path == "/api/bodega/instalados":
             qs = urllib.parse.parse_qs(parsed.query)
             d = qs.get("desde", [None])[0]

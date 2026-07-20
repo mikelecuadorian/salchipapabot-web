@@ -48,6 +48,10 @@
   .filters select:hover { border-color: var(--accent2); }
   .filters .btn-reset { background: #1e293b; color: var(--muted); border: 1px solid var(--border); border-radius: 8px; padding: 7px 16px; cursor: pointer; font-size: 12px; font-family: 'Inter', sans-serif; transition: .2s; }
   .filters .btn-reset:hover { color: var(--text); border-color: var(--muted); }
+  .filters .btn-quick { background: #1a1f35; color: var(--accent2); border: 1px solid #2a2a3a; border-radius: 8px; padding: 7px 14px; cursor: pointer; font-size: 12px; font-family: 'Inter', sans-serif; transition: .2s; }
+  .filters .btn-quick:hover { border-color: var(--accent2); background: rgba(96,165,250,.12); }
+  .filters input[type="date"] { background: #1a1f35; color: var(--text); border: 1px solid #2a2a3a; border-radius: 8px; padding: 7px 12px; font-family: 'Inter', sans-serif; cursor: pointer; outline: none; }
+  .filters input[type="date"]:hover { border-color: var(--accent2); }
   .filters .result-count { font-size: 13px; color: var(--accent2); margin-left: auto; }
 
   /* Grid layouts */
@@ -159,10 +163,12 @@
 
     <!-- FILTERS -->
     <div class="filters">
-      <label>📅 Día</label>
-      <select id="filterDia" onchange="aplicarFiltro()">
-        <option value="">Todos los días</option>
-      </select>
+      <label>📅 Desde</label>
+      <input type="date" id="filterDesde" onchange="aplicarFiltro()">
+      <label>📅 Hasta</label>
+      <input type="date" id="filterHasta" onchange="aplicarFiltro()">
+      <button class="btn-quick" onclick="filtroHoy()">🔴 Hoy</button>
+      <button class="btn-quick" onclick="filtroEsteMes()">🗓️ Este mes</button>
       <label>👷 Cuadrilla</label>
       <select id="filterCuadrilla" onchange="aplicarFiltro()">
         <option value="">Todas las cuadrillas</option>
@@ -264,29 +270,7 @@ async function cargarDatos() {
 
 // ── FILTERS ──
 function poblarFiltros() {
-  const diaSel = document.getElementById('filterDia');
   const cuadSel = document.getElementById('filterCuadrilla');
-
-  // Opción "Hoy" al inicio
-  const hoyOpt = document.createElement('option');
-  hoyOpt.value = 'hoy';
-  const hoy = new Date();
-  hoyOpt.textContent = '🔴 Hoy (' + hoy.toLocaleDateString('es-ES', { weekday:'short', day:'numeric', month:'short' }) + ')';
-  hoyOpt.style.fontWeight = '600';
-  diaSel.appendChild(hoyOpt);
-
-  DATA.dias.forEach(d => {
-    const opt = document.createElement('option');
-    opt.value = d.dia;
-    const dt = new Date(d.dia + 'T12:00:00');
-    opt.textContent = dt.toLocaleDateString('es-ES', { weekday:'short', day:'numeric', month:'short' }) + ` (${d.tot})`;
-    // Si es el día de hoy, ya lo pusimos arriba
-    if (d.dia === new Date().toISOString().split('T')[0]) return;
-    diaSel.appendChild(opt);
-  });
-
-  // Auto-seleccionar "Hoy" al cargar
-  diaSel.value = 'hoy';
 
   DATA.cuadrillas.forEach(c => {
     const opt = document.createElement('option');
@@ -294,27 +278,44 @@ function poblarFiltros() {
     opt.textContent = c.nom + ` (${c.tot})`;
     cuadSel.appendChild(opt);
   });
+
+  // Por defecto: este mes
+  filtroEsteMes();
+}
+
+function filtroHoy() {
+  const hoy = new Date();
+  const h = hoy.getFullYear() + '-' + String(hoy.getMonth() + 1).padStart(2, '0') + '-' + String(hoy.getDate()).padStart(2, '0');
+  document.getElementById('filterDesde').value = h;
+  document.getElementById('filterHasta').value = h;
+  aplicarFiltro();
+}
+
+function filtroEsteMes() {
+  const hoy = new Date();
+  const y = hoy.getFullYear();
+  const m = String(hoy.getMonth() + 1).padStart(2, '0');
+  document.getElementById('filterDesde').value = y + '-' + m + '-01';
+  document.getElementById('filterHasta').value = y + '-' + m + '-' + String(hoy.getDate()).padStart(2, '0');
+  aplicarFiltro();
 }
 
 function resetFiltros() {
-  document.getElementById('filterDia').value = 'hoy';
+  document.getElementById('filterDesde').value = '';
+  document.getElementById('filterHasta').value = '';
   document.getElementById('filterCuadrilla').value = '';
   aplicarFiltro();
 }
 
 async function aplicarFiltro() {
-  let dia = document.getElementById('filterDia').value;
+  const desde = document.getElementById('filterDesde').value;
+  const hasta = document.getElementById('filterHasta').value;
   const cuadrilla = document.getElementById('filterCuadrilla').value;
-
-  // Traducir "hoy" a la fecha actual
-  if (dia === 'hoy') {
-    const hoy = new Date();
-    dia = hoy.getFullYear() + '-' + String(hoy.getMonth() + 1).padStart(2, '0') + '-' + String(hoy.getDate()).padStart(2, '0');
-  }
 
   let url = '/api/reclamos-detalle?';
   const params = [];
-  if (dia) params.push(`dia=${encodeURIComponent(dia)}`);
+  if (desde) params.push(`desde=${encodeURIComponent(desde)}`);
+  if (hasta) params.push(`hasta=${encodeURIComponent(hasta)}`);
   if (cuadrilla) params.push(`cuadrilla=${encodeURIComponent(cuadrilla)}`);
   url += params.join('&');
 
@@ -322,8 +323,9 @@ async function aplicarFiltro() {
     const resp = await fetch(url);
     const data = await resp.json();
     renderDetalle(data.tramites);
+    const rango = (desde || hasta) ? `(${desde || '...'} → ${hasta || '...'})` : '';
     document.getElementById('resultCount').textContent =
-      `${data.tramites.length} trámites ${dia || cuadrilla ? 'filtrados' : ''}`;
+      `${data.tramites.length} trámites ${rango || (cuadrilla ? 'filtrados' : '')}`;
 
     // ── Actualizar KPIs con valores filtrados ──
     if (data.kpis) {
@@ -338,9 +340,13 @@ async function aplicarFiltro() {
       // Indicador visual de que los KPIs están filtrados
       const badge = document.getElementById('filtroBadge');
       if (badge) {
-        if (dia || cuadrilla) {
+        const hayFiltro = desde || hasta || cuadrilla;
+        if (hayFiltro) {
           badge.style.display = 'inline-block';
-          badge.textContent = `🔍 Filtrado: ${dia || 'todas'} ${cuadrilla ? '· ' + cuadrilla : ''}`;
+          const partes = [];
+          if (desde || hasta) partes.push(`📅 ${desde || '...'} → ${hasta || '...'}`);
+          if (cuadrilla) partes.push(`👷 ${cuadrilla}`);
+          badge.textContent = `🔍 Filtrado: ${partes.join(' · ')}`;
         } else {
           badge.style.display = 'none';
         }
