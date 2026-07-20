@@ -346,9 +346,7 @@ def get_reclamos_data():
     total = query_db(f"""SELECT COUNT(*) as total FROM recorrido_cuadrillas rc
         INNER JOIN gestion_tramites gt ON rc.numero_tramite = gt.numero_tramite
         WHERE gt.codigo_cliente = 'RECL'""")
-    ejecutados = query_db(f"""SELECT COUNT(*) as total FROM recorrido_cuadrillas rc
-        INNER JOIN gestion_tramites gt ON rc.numero_tramite = gt.numero_tramite
-        WHERE gt.codigo_cliente = 'RECL' AND rc.fecha_ejecucion IS NOT NULL AND rc.fecha_ejecucion != ''""")
+    ejecutados = query_db(f"SELECT COUNT(*) as total FROM gestion_tramites WHERE codigo_cliente = 'RECL' AND fecha_ejecucion IS NOT NULL AND fecha_ejecucion != ''")
     pendientes = query_db(f"""SELECT COUNT(*) as total FROM recorrido_cuadrillas rc
         INNER JOIN gestion_tramites gt ON rc.numero_tramite = gt.numero_tramite
         WHERE gt.codigo_cliente = 'RECL' AND (rc.fecha_ejecucion IS NULL OR rc.fecha_ejecucion = '')""")
