@@ -521,7 +521,34 @@ def get_reclamos_detalle(dia=None, cuadrilla=None):
         ORDER BY rc.fecha_analisis DESC, gt.fecha_ejecucion DESC
         LIMIT 200
     """)
-    return {"tramites": rows}
+
+    # ── KPIs filtrados (respetan los mismos filtros de dia/cuadrilla) ──
+    total_f = query_db(f"SELECT COUNT(*) as t FROM gestion_tramites gt WHERE {where_clause}")
+    eje_f = query_db(f"SELECT COUNT(*) as t FROM gestion_tramites gt WHERE {where_clause} AND gt.fecha_ejecucion IS NOT NULL AND gt.fecha_ejecucion != ''")
+    pen_f = query_db(f"SELECT COUNT(*) as t FROM gestion_tramites gt WHERE {where_clause} AND (gt.fecha_ejecucion IS NULL OR gt.fecha_ejecucion = '')")
+    prom_f = query_db(f"SELECT round(avg(gt.dias_transcurridos),1) as p FROM gestion_tramites gt WHERE {where_clause} AND gt.dias_transcurridos IS NOT NULL")
+    cuad_f = query_db(f"SELECT COUNT(DISTINCT gt.cuadrilla) as c FROM gestion_tramites gt WHERE {where_clause} AND gt.cuadrilla IS NOT NULL AND gt.cuadrilla != ''")
+    parr_f = query_db(f"SELECT COUNT(DISTINCT gt.parroquia) as c FROM gestion_tramites gt WHERE {where_clause} AND gt.parroquia IS NOT NULL AND gt.parroquia != ''")
+
+    tot_f = total_f[0]["t"] if total_f else 0
+    eje_f_v = eje_f[0]["t"] if eje_f else 0
+    pen_f_v = pen_f[0]["t"] if pen_f else 0
+    prom_f_v = prom_f[0]["p"] if prom_f and prom_f[0]["p"] is not None else 0
+    cuad_f_v = cuad_f[0]["c"] if cuad_f else 0
+    parr_f_v = parr_f[0]["c"] if parr_f else 0
+    pct_f = round(100 * eje_f_v / tot_f, 1) if tot_f > 0 else 0
+
+    kpis_filtrados = {
+        "total": tot_f,
+        "ejecutados": eje_f_v,
+        "pendientes": pen_f_v,
+        "porcentajeEjecucion": pct_f,
+        "diasPromedio": prom_f_v,
+        "numCuadrillas": cuad_f_v,
+        "numParroquias": parr_f_v,
+    }
+
+    return {"tramites": rows, "kpis": kpis_filtrados}
 
 
 # ═══════════════════════════════════════════════

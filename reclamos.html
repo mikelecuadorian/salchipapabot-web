@@ -120,8 +120,11 @@
   <!-- CONTENT (hidden until loaded) -->
   <div id="content" style="display:none">
 
-    <!-- KPI CARDS -->
-    <div class="kpi-grid">
+  <!-- BADGE DE FILTRO (aparece cuando se filtra) -->
+  <div id="filtroBadge" style="display:none; background:rgba(96,165,250,.15); color:#60a5fa; border:1px solid rgba(96,165,250,.3); padding:6px 12px; border-radius:8px; font-size:13px; font-weight:600; margin-bottom:12px;"></div>
+
+  <!-- KPI CARDS -->
+  <div class="kpi-grid">
       <div class="kpi-card accent1">
         <div class="kpi-label">Total RECL</div>
         <div class="kpi-value" id="kpiTotal">—</div>
@@ -321,6 +324,28 @@ async function aplicarFiltro() {
     renderDetalle(data.tramites);
     document.getElementById('resultCount').textContent =
       `${data.tramites.length} trámites ${dia || cuadrilla ? 'filtrados' : ''}`;
+
+    // ── Actualizar KPIs con valores filtrados ──
+    if (data.kpis) {
+      const k = data.kpis;
+      document.getElementById('kpiTotal').textContent = k.total.toLocaleString();
+      document.getElementById('kpiEjecutados').textContent = k.ejecutados.toLocaleString();
+      document.getElementById('kpiEjecutadosSub').textContent = k.porcentajeEjecucion + '% completados';
+      document.getElementById('kpiPendientes').textContent = k.pendientes.toLocaleString();
+      document.getElementById('kpiDias').textContent = k.diasPromedio;
+      document.getElementById('kpiCuadrillas').textContent = k.numCuadrillas;
+      document.getElementById('kpiParroquias') && (document.getElementById('kpiParroquias').textContent = k.numParroquias);
+      // Indicador visual de que los KPIs están filtrados
+      const badge = document.getElementById('filtroBadge');
+      if (badge) {
+        if (dia || cuadrilla) {
+          badge.style.display = 'inline-block';
+          badge.textContent = `🔍 Filtrado: ${dia || 'todas'} ${cuadrilla ? '· ' + cuadrilla : ''}`;
+        } else {
+          badge.style.display = 'none';
+        }
+      }
+    }
   } catch (e) {
     document.getElementById('detalleBody').innerHTML =
       `<tr><td colspan="7" style="color:#ef4444;text-align:center;padding:20px">❌ Error: ${e.message}</td></tr>`;
