@@ -895,7 +895,14 @@ def get_bodega_catalogos():
 
 class APIHandler(SimpleHTTPRequestHandler):
     """Manejador que sirve estáticos + API JSON"""
-    
+
+    def end_headers(self):
+        # Evitar caché en el navegador (siempre traer versión nueva)
+        self.send_header("Cache-Control", "no-store, no-cache, must-revalidate, max-age=0")
+        self.send_header("Pragma", "no-cache")
+        self.send_header("Expires", "0")
+        super().end_headers()
+
     def do_GET(self):
         parsed = urllib.parse.urlparse(self.path)
         path = parsed.path
