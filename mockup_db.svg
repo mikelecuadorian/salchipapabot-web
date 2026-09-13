@@ -1,0 +1,67 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 480 340" width="480" height="340">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#1a1b2e"/>
+      <stop offset="100%" stop-color="#0f1020"/>
+    </linearGradient>
+    <linearGradient id="bar" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#2a2b3e"/>
+      <stop offset="100%" stop-color="#1e1f32"/>
+    </linearGradient>
+  </defs>
+  <rect x="0" y="0" width="480" height="340" rx="12" fill="url(#bg)"/>
+  <rect x="0" y="0" width="480" height="40" rx="12" fill="url(#bar)"/>
+  <rect x="0" y="30" width="480" height="10" fill="url(#bar)"/>
+  <circle cx="20" cy="20" r="6" fill="#ff5f57"/>
+  <circle cx="40" cy="20" r="6" fill="#febc2e"/>
+  <circle cx="60" cy="20" r="6" fill="#28c840"/>
+  <text x="240" y="26" text-anchor="middle" fill="#8888aa" font-family="monospace" font-size="12">Hermes — SQL Query</text>
+  <!-- Natural language input -->
+  <rect x="15" y="55" width="450" height="45" rx="8" fill="#2a2b45"/>
+  <text x="25" y="75" fill="#88ddaa" font-family="monospace" font-size="11">🗣️ Usuario dice:</text>
+  <text x="25" y="92" fill="#ddddee" font-family="monospace" font-size="12">"muéstrame los últimos 10 reclamos"</text>
+  <!-- Generated SQL -->
+  <rect x="15" y="110" width="450" height="55" rx="8" fill="#1a2a1a"/>
+  <text x="25" y="128" fill="#66ddaa" font-family="monospace" font-size="10">⚡ SQL generado:</text>
+  <text x="25" y="143" fill="#aaddcc" font-family="monospace" font-size="10">SELECT * FROM gestion_tramites</text>
+  <text x="25" y="157" fill="#aaddcc" font-family="monospace" font-size="10">WHERE estado='pendiente' ORDER BY id DESC LIMIT 10</text>
+  <!-- Result table -->
+  <rect x="15" y="175" width="450" height="100" rx="8" fill="#0f1020"/>
+  <!-- Table header -->
+  <rect x="15" y="175" width="450" height="22" rx="8" fill="#2a2b45"/>
+  <rect x="15" y="190" width="450" height="7" fill="#2a2b45"/>
+  <text x="30" y="191" fill="#88aacc" font-family="monospace" font-size="9" font-weight="bold">ID</text>
+  <text x="65" y="191" fill="#88aacc" font-family="monospace" font-size="9" font-weight="bold">Cliente</text>
+  <text x="155" y="191" fill="#88aacc" font-family="monospace" font-size="9" font-weight="bold">Tipo</text>
+  <text x="215" y="191" fill="#88aacc" font-family="monospace" font-size="9" font-weight="bold">Estado</text>
+  <text x="290" y="191" fill="#88aacc" font-family="monospace" font-size="9" font-weight="bold">Fecha</text>
+  <text x="370" y="191" fill="#88aacc" font-family="monospace" font-size="9" font-weight="bold">Cuadrilla</text>
+  <!-- Rows -->
+  <text x="30" y="210" fill="#ddddee" font-family="monospace" font-size="9">10245</text>
+  <text x="65" y="210" fill="#ddddee" font-family="monospace" font-size="9">Juan Pérez</text>
+  <text x="155" y="210" fill="#ddddee" font-family="monospace" font-size="9">RECL</text>
+  <text x="215" y="210" fill="#f0c060" font-family="monospace" font-size="9">pendiente</text>
+  <text x="290" y="210" fill="#ddddee" font-family="monospace" font-size="9">22/07</text>
+  <text x="370" y="210" fill="#ddddee" font-family="monospace" font-size="9">B-12</text>
+  <text x="30" y="228" fill="#ddddee" font-family="monospace" font-size="9">10246</text>
+  <text x="65" y="228" fill="#ddddee" font-family="monospace" font-size="9">María López</text>
+  <text x="155" y="228" fill="#ddddee" font-family="monospace" font-size="9">INST</text>
+  <text x="215" y="228" fill="#66ddaa" font-family="monospace" font-size="9">ejecutado</text>
+  <text x="290" y="228" fill="#ddddee" font-family="monospace" font-size="9">22/07</text>
+  <text x="370" y="228" fill="#ddddee" font-family="monospace" font-size="9">B-08</text>
+  <text x="30" y="246" fill="#ddddee" font-family="monospace" font-size="9">10247</text>
+  <text x="65" y="246" fill="#ddddee" font-family="monospace" font-size="9">Carlos Ruiz</text>
+  <text x="155" y="246" fill="#ddddee" font-family="monospace" font-size="9">RETI</text>
+  <text x="215" y="246" fill="#f0c060" font-family="monospace" font-size="9">pendiente</text>
+  <text x="290" y="246" fill="#ddddee" font-family="monospace" font-size="9">22/07</text>
+  <text x="370" y="246" fill="#ddddee" font-family="monospace" font-size="9">B-12</text>
+  <text x="30" y="264" fill="#ddddee" font-family="monospace" font-size="9">10248</text>
+  <text x="65" y="264" fill="#ddddee" font-family="monospace" font-size="9">Ana Torres</text>
+  <text x="155" y="264" fill="#ddddee" font-family="monospace" font-size="9">RECL</text>
+  <text x="215" y="264" fill="#66ddaa" font-family="monospace" font-size="9">ejecutado</text>
+  <text x="290" y="264" fill="#ddddee" font-family="monospace" font-size="9">22/07</text>
+  <text x="370" y="264" fill="#ddddee" font-family="monospace" font-size="9">B-15</text>
+  <!-- Status message -->
+  <rect x="15" y="285" width="450" height="35" rx="6" fill="#1a2a1a"/>
+  <text x="240" y="307" text-anchor="middle" fill="#66ddaa" font-family="monospace" font-size="11">✅ 10 resultados en 0.032s</text>
+</svg>

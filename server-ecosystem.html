@@ -782,7 +782,7 @@
   </div>
   <h1>Ing. Miguel Angel Campuzano Lupera<br>Server Ecosystem</h1>
   <p>
-    Seis bots inteligentes de Telegram, transcripción de voz con Groq Whisper,
+    Dos bots inteligentes de Telegram, transcripción de voz con Groq Whisper,
     inteligencia artificial con DeepSeek, agente autónomo Hermes y modelo local Llama 3.2,
     toda la infraestructura corriendo 24/7 desde una tablet Android.
   </p>
@@ -819,78 +819,21 @@
 <section class="section fade-in">
   <span class="section-label">🤖 Aplicaciones</span>
   <h2>Los <span class="highlight">Bots</span></h2>
-  <p class="section-subtitle">Seis asistentes inteligentes que resuelven problemas reales, todos corriendo sobre la misma infraestructura.</p>
+  <p class="section-subtitle">Dos asistentes inteligentes que resuelven problemas reales, todos corriendo sobre la misma infraestructura.</p>
 
   <div class="bots-grid">
-    <!-- PapipolloBot -->
-    <div class="bot-card">
-      <span class="icon">🚗🏍️</span>
-      <h3>PapipolloBot v2.0</h3>
-      <span class="handle">@papipollo_593_bot</span>
-      <p>Asistente de mantenimiento para autos 🚗 y motos 🏍️. Registra servicios, calcula próximos mantenimientos con intervalos específicos por tipo de vehículo (motos: cada 3,000 km aceite, cadena cada 500 km, etc.), y responde consultas mecánicas con IA.</p>
-      <div class="tags">
-        <span class="tag ai">DeepSeek IA</span>
-        <span class="tag db">SQLite</span>
-        <span class="tag bot">python-telegram-bot</span>
-        <span class="tag api">OpenAI SDK</span>
-        <span class="tag ai">🏍️ Moto Ready</span>
-      </div>
-    </div>
-
     <!-- SalchipapaBot -->
     <div class="bot-card">
       <span class="icon">⚡</span>
       <h3>SalchipapaBot</h3>
       <span class="handle">@salchipapa_593_bot</span>
-      <p>Consulta de medidores eléctricos del Consorcio ART (Ecuador). Busca por cuadrilla, número de serie, trámite o solicitud en lenguaje natural. Incluye transcripción de voz con Groq Whisper y coordenadas GPS con Google Maps.</p>
+      <p>Consulta de medidores eléctricos del Consorcio ART (Ecuador). Busca por cuadrilla, número de serie, trámite o solicitud en lenguaje natural. Incluye transcripción de voz con Groq Whisper y coordenadas GPS del portal ACIIS y enlaces a Google Maps.</p>
       <div class="tags">
         <span class="tag ai">DeepSeek IA</span>
         <span class="tag ai">Groq Whisper</span>
         <span class="tag db">SQLite</span>
         <span class="tag bot">python-telegram-bot</span>
-        <span class="tag api">Google Maps API</span>
-      </div>
-    </div>
-
-    <!-- BurgerBot -->
-    <div class="bot-card">
-      <span class="icon">🍔</span>
-      <h3>BurgerBot</h3>
-      <span class="handle">@burgerbot_593_bot</span>
-      <p>Generador de cuestionarios médicos interactivos con opción múltiple. Elige área y cantidad de preguntas, luego responde con retroalimentación instantánea.</p>
-      <div class="tags">
-        <span class="tag ai">DeepSeek IA</span>
-        <span class="tag db">SQLite</span>
-        <span class="tag bot">python-telegram-bot</span>
-        <span class="tag api">AsyncOpenAI</span>
-      </div>
-    </div>
-
-    <!-- TacoBot -->
-    <div class="bot-card">
-      <span class="icon">🌮</span>
-      <h3>TacoBot</h3>
-      <span class="handle">@taco_593_bot</span>
-      <p>Asistente general con IA local. Conversación con personalidad configurable, memoria completa por usuario, y monitoreo de servicios de la tablet. Corre con modelo Llama 3.2 1B local mediante llama.cpp.</p>
-      <div class="tags">
-        <span class="tag ai">Llama 3.2 1B local</span>
-        <span class="tag db">SQLite</span>
-        <span class="tag bot">python-telegram-bot</span>
-        <span class="tag api">llama.cpp API</span>
-      </div>
-    </div>
-
-    <!-- PapafritaBot -->
-    <div class="bot-card">
-      <span class="icon">🍟</span>
-      <h3>PapafritaBot</h3>
-      <span class="handle">@papafrita_593_bot</span>
-      <p>Chat con inteligencia artificial que también escucha. Recibe mensajes de voz, los transcribe con Groq Whisper y responde usando DeepSeek. Conversación con historial por usuario.</p>
-      <div class="tags">
-        <span class="tag ai">DeepSeek IA</span>
-        <span class="tag ai">Groq Whisper</span>
-        <span class="tag bot">python-telegram-bot</span>
-        <span class="tag api">OpenAI SDK</span>
+        <span class="tag api">Scraper SAP 🕷️</span>
       </div>
     </div>
 
@@ -918,42 +861,85 @@
   <p class="section-subtitle">Automatizaciones, integraciones y soluciones que ya están en producción.</p>
 
   <div class="caps-grid">
-    <div class="cap-card">
-      <span class="cap-icon">📧</span>
-      <h4>Gestión Automática de Correos</h4>
-      <p>Resúmenes inteligentes de la bandeja de entrada cada hora vía cron job. Responde correos automáticamente con información actualizada de la base de datos.</p>
-      <span class="cap-tag">Himalaya + Cron</span>
-    </div>
-    <div class="cap-card">
-      <span class="cap-icon">🗄️</span>
-      <h4>Consultas SQL en Lenguaje Natural</h4>
-      <p>Más de 147,000 registros en 4 tablas. Carga de archivos XLSX a SQLite, consultas por voz o texto, análisis por cuadrilla y reportes diarios.</p>
-      <span class="cap-tag">SQLite + DeepSeek</span>
-    </div>
-    <div class="cap-card">
-      <span class="cap-icon">🎤</span>
-      <h4>Transcripción de Voz a Acción</h4>
-      <p>Groq Whisper transforma audios en texto y el agente ejecuta la acción sin intervención manual. Preguntas, respuestas y automatización por voz.</p>
-      <span class="cap-tag">Groq Whisper + IA</span>
-    </div>
-    <div class="cap-card">
-      <span class="cap-icon">🤖</span>
-      <h4>IA Híbrida Cloud + Local</h4>
-      <p>DeepSeek v4 Flash en la nube para tareas complejas y Llama 3.2 1B local en la tablet para respuestas rápidas sin depender de internet, más modelo de razonamiento DeepSeek-R1 para análisis profundos.</p>
-      <span class="cap-tag">DeepSeek + Llama 3.2</span>
-    </div>
-    <div class="cap-card">
-      <span class="cap-icon">📊</span>
-      <h4>Análisis de Datos en Tiempo Real</h4>
-      <p>Consultas dinámicas a la base de datos de medidores: filtros por cuadrilla, tipo de solicitud, fechas, coordenadas GPS y más. Reportes al instante.</p>
-      <span class="cap-tag">SQL + Pandas</span>
-    </div>
-    <div class="cap-card">
-      <span class="cap-icon">🔄</span>
-      <h4>Automatización de Procesos</h4>
-      <p>Carga automática de XLSX a SQLite, respuestas programadas a correos, resúmenes periódicos, y tareas de mantenimiento automatizadas con cron y scripts.</p>
-      <span class="cap-tag">Cron + Scripts</span>
-    </div>
+<div class="cap-card">
+<span class="cap-icon">📧</span>
+<h4>Gestión Automática de Correos</h4>
+<p>Resúmenes inteligentes de la bandeja de entrada cada hora vía cron job. Responde correos automáticamente con información actualizada de la base de datos.</p>
+<span class="cap-tag">Himalaya + Cron</span>
+</div>
+<div class="cap-card">
+<span class="cap-icon">🗄️</span>
+<h4>Consultas SQL en Lenguaje Natural</h4>
+<p>Más de 375,000 registros en 8 tablas. Carga de archivos XLSX a SQLite, consultas por voz o texto, análisis por cuadrilla y reportes diarios.</p>
+<span class="cap-tag">SQLite + DeepSeek</span>
+</div>
+<div class="cap-card">
+<span class="cap-icon">🎤</span>
+<h4>Transcripción de Voz a Acción</h4>
+<p>Groq Whisper transforma audios en texto y el agente ejecuta la acción sin intervención manual. Preguntas, respuestas y automatización por voz.</p>
+<span class="cap-tag">Groq Whisper + IA</span>
+</div>
+<div class="cap-card">
+<span class="cap-icon">🤖</span>
+<h4>IA Híbrida Cloud + Local</h4>
+<p>DeepSeek v4 Flash en la nube para tareas complejas y Llama 3.2 1B local en la tablet para respuestas rápidas sin depender de internet, más modelo de razonamiento DeepSeek-R1 para análisis profundos.</p>
+<span class="cap-tag">DeepSeek + Llama 3.2</span>
+</div>
+<div class="cap-card">
+<span class="cap-icon">📊</span>
+<h4>Análisis de Datos en Tiempo Real</h4>
+<p>Consultas dinámicas a la base de datos de medidores: filtros por cuadrilla, tipo de solicitud, fechas, coordenadas GPS y más. Reportes al instante.</p>
+<span class="cap-tag">SQL + Pandas</span>
+</div>
+<div class="cap-card">
+<span class="cap-icon">🔄</span>
+<h4>Automatización de Procesos</h4>
+<p>Carga automática de XLSX a SQLite, respuestas programadas a correos, resúmenes periódicos, y tareas de mantenimiento automatizadas con cron y scripts.</p>
+<span class="cap-tag">Cron + Scripts</span>
+</div>
+<div class="cap-card">
+<span class="cap-icon">🌐</span>
+<h4>Infraestructura Web Propia</h4>
+<p>Servidor web publicado por túnel Cloudflare con HTTPS: dashboard de monitoreo, página del ecosistema y acceso remoto. Todo servido desde la tablet, sin hosting contratado.</p>
+<span class="cap-tag">Cloudflare Tunnel</span>
+</div>
+<div class="cap-card">
+<span class="cap-icon">📊</span>
+<h4>Monitoreo en Vivo del Servidor</h4>
+<p>Endpoint <code>/api/system</code> que reporta CPU, RAM, disco, uptime del dispositivo y el estado de cada servicio en tiempo real, verificando que el PID esté vivo.</p>
+<span class="cap-tag">API + Dashboard</span>
+</div>
+<div class="cap-card">
+<span class="cap-icon">💾</span>
+<h4>Respaldos Automáticos a Telegram</h4>
+<p>Respaldo periódico de la base de datos enviado directo al chat, sin OAuth ni servicios de terceros. Recuperación ante cualquier desastre.</p>
+<span class="cap-tag">Cron + Telegram API</span>
+</div>
+<div class="cap-card">
+<span class="cap-icon">🔄</span>
+<h4>Auto-Recuperación de Servicios</h4>
+<p>Cada servicio corre bajo <code>runsv</code>: si un proceso se cae, se levanta solo. Supervisión real con reinicio automático y rotación de logs.</p>
+<span class="cap-tag">runit + runsv</span>
+</div>
+<div class="cap-card">
+<span class="cap-icon">🩺</span>
+<h4>Cuestionarios Médicos con IA</h4>
+<p>Generador de evaluaciones interactivas de opción múltiple por área temática, con retroalimentación instantánea y preguntas creadas por IA.</p>
+<span class="cap-tag">DeepSeek IA</span>
+</div>
+<div class="cap-card">
+<span class="cap-icon">🚗</span>
+<h4>Mantenimiento Automotriz Multi-Vehículo</h4>
+<p>Seguimiento de servicios para autos y motos, con intervalos específicos por tipo de vehículo (aceite, cadena, filtros) y aviso del próximo mantenimiento.</p>
+<span class="cap-tag">SQLite + IA</span>
+</div>
+<div class="cap-card">
+<span class="cap-icon">🧠</span>
+<h4>IA Local sin Internet</h4>
+<p>Se logró correr un modelo Llama 3.2 1B dentro de la propia tablet con llama.cpp, expuesto por una API compatible con OpenAI. IA 100% local, sin depender de la nube.</p>
+<span class="cap-tag">llama.cpp</span>
+</div>
+
   </div>
 </section>
 
@@ -965,7 +951,7 @@
 
   <div class="mockup-grid">
     <div class="mockup-card">
-      <img src="mockup_chat.png" alt="Hermes Agent Chat" class="mockup-img">
+      <img src="mockup_chat.svg" alt="Hermes Agent Chat" class="mockup-img">
       <div class="mockup-caption">
         <span class="mockup-icon">🧠</span>
         <h4>Hermes Agent en acción</h4>
@@ -973,7 +959,7 @@
       </div>
     </div>
     <div class="mockup-card">
-      <img src="mockup_email.png" alt="Resumen de Correos" class="mockup-img">
+      <img src="mockup_email.svg" alt="Resumen de Correos" class="mockup-img">
       <div class="mockup-caption">
         <span class="mockup-icon">📧</span>
         <h4>Resumen automático de correos</h4>
@@ -981,7 +967,7 @@
       </div>
     </div>
     <div class="mockup-card">
-      <img src="mockup_db.png" alt="Consulta Base de Datos" class="mockup-img">
+      <img src="mockup_db.svg" alt="Consulta Base de Datos" class="mockup-img">
       <div class="mockup-caption">
         <span class="mockup-icon">🗄️</span>
         <h4>Consultas SQL en lenguaje natural</h4>
@@ -1029,26 +1015,26 @@
       <tr class="highlight-row">
         <td><strong>TOTAL</strong></td>
         <td><span class="num">213,579</span></td>
-        <td>Datos desde <strong>Oct 2024</strong> hasta hoy · 126 MB</td>
+        <td>Datos desde <strong>Oct 2024</strong> hasta hoy · 199 MB</td>
       </tr>
     </tbody>
   </table>
 
   <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap:16px; margin-top:28px;">
     <div class="stat-card" style="margin:0;">
-      <div class="num" style="font-size:1.8rem;">47,035</div>
+      <div class="num" style="font-size:1.8rem;">42,998</div>
       <div class="desc">Clientes únicos registrados</div>
     </div>
     <div class="stat-card" style="margin:0;">
-      <div class="num" style="font-size:1.8rem;">58</div>
+      <div class="num" style="font-size:1.8rem;">64</div>
       <div class="desc">Tipos de solicitud diferentes</div>
     </div>
     <div class="stat-card" style="margin:0;">
-      <div class="num" style="font-size:1.8rem;">38</div>
+      <div class="num" style="font-size:1.8rem;">42</div>
       <div class="desc">Cuadrillas activas en campo</div>
     </div>
     <div class="stat-card" style="margin:0;">
-      <div class="num" style="font-size:1.8rem;">126</div>
+      <div class="num" style="font-size:1.8rem;">199</div>
       <div class="desc">Megabytes de datos gestionados</div>
     </div>
   </div>
@@ -1061,54 +1047,103 @@
   <p class="section-subtitle">Desde la primera línea de código hasta el agente autónomo, así ha crecido el proyecto.</p>
 
   <div class="timeline">
-    <div class="timeline-item">
-      <span class="tl-date">May 2026</span>
-      <div class="tl-content">
-        <h4>🚀 Nace SalchipapaBot</h4>
-        <p>Primer bot para consulta de medidores eléctricos del Consorcio ART. Base de datos SQLite con 66K registros y comandos de búsqueda por número de serie, trámite y solicitud.</p>
-        <span class="tl-tag">Bot #1</span>
-      </div>
-    </div>
-    <div class="timeline-item">
-      <span class="tl-date">Jun 2026</span>
-      <div class="tl-content">
-        <h4>🌮 Llegan BurgerBot, PapipolloBot y TacoBot</h4>
-        <p>El ecosistema crece: cuestionarios médicos con IA, mantenimiento automotriz multi-vehículo, y el primer bot con modelo local Llama 3.2 1B corriendo sin internet mediante llama.cpp.</p>
-        <span class="tl-tag">3 Bots nuevos</span>
-      </div>
-    </div>
-    <div class="timeline-item">
-      <span class="tl-date">Jun 2026</span>
-      <div class="tl-content">
-        <h4>🎤 Transcripción de Voz con Groq Whisper</h4>
-        <p>Integración de Groq Whisper para transcripción de audios. Los bots ahora entienden comandos de voz sin depender de APIs gratuitas inestables.</p>
-        <span class="tl-tag">Voz → Texto</span>
-      </div>
-    </div>
-    <div class="timeline-item">
-      <span class="tl-date">Jun 2026</span>
-      <div class="tl-content">
-        <h4>🧠 Nace Hermes Agent</h4>
-        <p>Agente de IA autónomo que gestiona correos electrónicos con Himalaya, consulta la base de datos en lenguaje natural, automatiza tareas y genera reportes. El cerebro del ecosistema.</p>
-        <span class="tl-tag">Automatización total</span>
-      </div>
-    </div>
-    <div class="timeline-item">
-      <span class="tl-date">Jun 2026</span>
-      <div class="tl-content">
-        <h4>📧 Automatización de Correos Electrónicos</h4>
-        <p>Cron job que resume la bandeja de entrada cada hora, responde correos automáticamente con datos actualizados de la base de datos, y mantiene el flujo de trabajo sin intervención manual.</p>
-        <span class="tl-tag">Email Automation</span>
-      </div>
-    </div>
-    <div class="timeline-item">
-      <span class="tl-date">Hoy</span>
-      <div class="tl-content">
-        <h4>🔥 6 Bots · 11 Servicios · 213K Registros</h4>
-        <p>Todo corriendo 24/7 desde una tablet OUKITEL RT2 en Guayaquil, Ecuador. Sin servidores externos, sin nube, sin costos mensuales.</p>
-        <span class="tl-tag">Hecho en Ecuador 🇪🇨</span>
-      </div>
-    </div>
+<div class="timeline-item">
+<span class="tl-date">May 2026</span>
+<div class="tl-content">
+<h4>🚀 Nace SalchipapaBot</h4>
+<p>Primer bot para consulta de medidores eléctricos del Consorcio ART. Base de datos SQLite y comandos de búsqueda por número de serie, trámite y solicitud.</p>
+<span class="tl-tag">Bot #1</span>
+</div>
+</div>
+<div class="timeline-item">
+<span class="tl-date">Jun 2026</span>
+<div class="tl-content">
+<h4>🌮 El ecosistema crece</h4>
+<p>Cuestionarios médicos con IA, mantenimiento automotriz multi-vehículo y el primer modelo local Llama 3.2 1B corriendo sin internet mediante llama.cpp.</p>
+<span class="tl-tag">3 Bots nuevos</span>
+</div>
+</div>
+<div class="timeline-item">
+<span class="tl-date">Jun 2026</span>
+<div class="tl-content">
+<h4>🎤 Transcripción de Voz con Groq Whisper</h4>
+<p>Integración de Groq Whisper para transcribir audios. Los bots pasan a entender comandos de voz, sin depender de APIs gratuitas inestables.</p>
+<span class="tl-tag">Voz → Texto</span>
+</div>
+</div>
+<div class="timeline-item">
+<span class="tl-date">Jun 2026</span>
+<div class="tl-content">
+<h4>🧠 Nace Hermes Agent</h4>
+<p>Agente de IA autónomo que gestiona correos con Himalaya, consulta la base de datos en lenguaje natural y automatiza tareas complejas. El cerebro del ecosistema.</p>
+<span class="tl-tag">Automatización total</span>
+</div>
+</div>
+<div class="timeline-item">
+<span class="tl-date">Jun 2026</span>
+<div class="tl-content">
+<h4>📧 Automatización de Correos Electrónicos</h4>
+<p>Cron job que resume la bandeja de entrada cada hora y responde correos con datos actualizados de la base de datos, sin intervención manual.</p>
+<span class="tl-tag">Email Automation</span>
+</div>
+</div>
+<div class="timeline-item">
+<span class="tl-date">Jul 2026</span>
+<div class="tl-content">
+<h4>🌐 Primera Web Pública del Ecosistema</h4>
+<p>Dashboard y API server publicados por túnel Cloudflare con HTTPS. Tres hostnames: dashboard, ecosistema y acceso remoto al servidor.</p>
+<span class="tl-tag">Cloudflare Tunnel</span>
+</div>
+</div>
+<div class="timeline-item">
+<span class="tl-date">Jul 2026</span>
+<div class="tl-content">
+<h4>📊 Monitoreo en Vivo del Servidor</h4>
+<p>Endpoint <code>/api/system</code>: CPU, RAM, disco, uptime del dispositivo y estado de cada servicio, verificando que el PID esté realmente vivo.</p>
+<span class="tl-tag">/api/system</span>
+</div>
+</div>
+<div class="timeline-item">
+<span class="tl-date">Jul 2026</span>
+<div class="tl-content">
+<h4>📈 Tableros de Reclamos y KPIs</h4>
+<p>Tableros que respetan los filtros de día y cuadrilla, con una fuente única de datos para que cada KPI salga de la tabla correcta.</p>
+<span class="tl-tag">Data Science</span>
+</div>
+</div>
+<div class="timeline-item">
+<span class="tl-date">Ago 2026</span>
+<div class="tl-content">
+<h4>🔍 Nuevas Consultas del Bot</h4>
+<p>Consultas por cuenta contrato y datos de cliente, normalización de identificadores y precisión en medidores nuevos y retirados.</p>
+<span class="tl-tag">Mejoras continuas</span>
+</div>
+</div>
+<div class="timeline-item">
+<span class="tl-date">Sep 2026</span>
+<div class="tl-content">
+<h4>🩺 Medidores Retirados</h4>
+<p>Nuevo comando y tabla <code>medidores_retirados</code>: el histórico de retiros queda consultable en lenguaje natural.</p>
+<span class="tl-tag">El bot crece</span>
+</div>
+</div>
+<div class="timeline-item">
+<span class="tl-date">Sep 2026</span>
+<div class="tl-content">
+<h4>🧹 Consolidación del Ecosistema</h4>
+<p>Se retiran los bots ociosos y el motor de IA local: el foco pasa a lo que realmente se usa. Supervisión con runsv, respaldos automáticos y monitoreo en vivo.</p>
+<span class="tl-tag">Menos es más</span>
+</div>
+</div>
+<div class="timeline-item">
+<span class="tl-date">Hoy</span>
+<div class="tl-content">
+<h4>🔥 2 Bots · 7 Servicios · 375K Registros</h4>
+<p>Todo corriendo 24/7 desde una tablet OUKITEL RT2 en Guayaquil, Ecuador. Sin servidores externos, sin costos mensuales.</p>
+<span class="tl-tag">Hecho en Ecuador 🇪🇨</span>
+</div>
+</div>
+
   </div>
 </section>
 </section>
@@ -1118,91 +1153,171 @@
   <p class="section-subtitle">Lenguajes, frameworks y herramientas que hacen funcionar el ecosistema.</p>
 
   <div class="tech-grid">
-    <div class="tech-item">
-      <span class="emoji">🐍</span>
-      <span class="name">Python 3.14</span>
-      <span class="desc">Lenguaje principal</span>
-    </div>
-    <div class="tech-item">
-      <span class="emoji">🗄️</span>
-      <span class="name">SQLite</span>
-      <span class="desc">Base de datos embebida</span>
-    </div>
-    <div class="tech-item">
-      <span class="emoji">🤖</span>
-      <span class="name">python-telegram-bot</span>
-      <span class="desc">Framework de bots</span>
-    </div>
-    <div class="tech-item">
-      <span class="emoji">🧠</span>
-      <span class="name">DeepSeek v4 Flash</span>
-      <span class="desc">IA conversacional cloud</span>
-    </div>
-    <div class="tech-item">
-      <span class="emoji">🏠</span>
-      <span class="name">llama.cpp + Llama 3.2</span>
-      <span class="desc">IA local en la tablet</span>
-    </div>
-    <div class="tech-item">
-      <span class="emoji">🧠</span>
-      <span class="name">DeepSeek-R1</span>
-      <span class="desc">Razonamiento profundo</span>
-    </div>
-    <div class="tech-item">
-      <span class="emoji">🔌</span>
-      <span class="name">OpenAI SDK</span>
-      <span class="desc">Cliente DeepSeek</span>
-    </div>
-    <div class="tech-item">
-      <span class="emoji">📡</span>
-      <span class="name">Cloudflare Tunnel</span>
-      <span class="desc">Túneles HTTPS</span>
-    </div>
-    <div class="tech-item">
-      <span class="emoji">📱</span>
-      <span class="name">Termux + PRoot</span>
-      <span class="desc">Entorno Linux en Android</span>
-    </div>
-    <div class="tech-item">
-      <span class="emoji">🔄</span>
-      <span class="name">runsv (runit)</span>
-      <span class="desc">Supervisor de servicios</span>
-    </div>
-    <div class="tech-item">
-      <span class="emoji">🧠</span>
-      <span class="name">Hermes Agent</span>
-      <span class="desc">Framework de agentes IA</span>
-    </div>
-    <div class="tech-item">
-      <span class="emoji">📧</span>
-      <span class="name">Himalaya CLI</span>
-      <span class="desc">Cliente email IMAP/SMTP</span>
-    </div>
-    <div class="tech-item">
-      <span class="emoji">⏰</span>
-      <span class="name">crond</span>
-      <span class="desc">Tareas programadas</span>
-    </div>
-    <div class="tech-item">
-      <span class="emoji">🌐</span>
-      <span class="name">HTTP + REST</span>
-      <span class="desc">APIs y webhooks</span>
-    </div>
-    <div class="tech-item">
-      <span class="emoji">🔐</span>
-      <span class="name">python-dotenv</span>
-      <span class="desc">Config segura</span>
-    </div>
-    <div class="tech-item">
-      <span class="emoji">📊</span>
-      <span class="name">Pandas + XLSX</span>
-      <span class="desc">Procesamiento datos</span>
-    </div>
-    <div class="tech-item">
-      <span class="emoji">🎤</span>
-      <span class="name">Groq Whisper</span>
-      <span class="desc">Transcripción de voz</span>
-    </div>
+      <div class="tech-item">
+        <span class="emoji">🐍</span>
+        <span class="name">Python 3.14</span>
+        <span class="desc">Lenguaje principal</span>
+      </div>
+      <div class="tech-item">
+        <span class="emoji">🗄️</span>
+        <span class="name">SQLite</span>
+        <span class="desc">Base de datos embebida</span>
+      </div>
+      <div class="tech-item">
+        <span class="emoji">📊</span>
+        <span class="name">pandas + NumPy</span>
+        <span class="desc">Procesamiento de datos</span>
+      </div>
+      <div class="tech-item">
+        <span class="emoji">📗</span>
+        <span class="name">openpyxl</span>
+        <span class="desc">Lectura de Excel / XLSX</span>
+      </div>
+      <div class="tech-item">
+        <span class="emoji">🤖</span>
+        <span class="name">python-telegram-bot 22.7</span>
+        <span class="desc">Framework de bots</span>
+      </div>
+      <div class="tech-item">
+        <span class="emoji">🧠</span>
+        <span class="name">DeepSeek v4 Flash</span>
+        <span class="desc">IA conversacional cloud</span>
+      </div>
+      <div class="tech-item">
+        <span class="emoji">🔬</span>
+        <span class="name">DeepSeek-R1</span>
+        <span class="desc">Razonamiento profundo</span>
+      </div>
+      <div class="tech-item">
+        <span class="emoji">🎤</span>
+        <span class="name">Groq Whisper</span>
+        <span class="desc">Voz → texto</span>
+      </div>
+      <div class="tech-item">
+        <span class="emoji">🔊</span>
+        <span class="name">pydub + SpeechRecognition</span>
+        <span class="desc">Procesamiento de audio</span>
+      </div>
+      <div class="tech-item">
+        <span class="emoji">🏠</span>
+        <span class="name">llama.cpp + Llama 3.2 1B</span>
+        <span class="desc">IA local en la tablet</span>
+      </div>
+      <div class="tech-item">
+        <span class="emoji">🧠</span>
+        <span class="name">Hermes Agent</span>
+        <span class="desc">Framework de agentes IA</span>
+      </div>
+      <div class="tech-item">
+        <span class="emoji">🕷️</span>
+        <span class="name">Playwright</span>
+        <span class="desc">Automatización de navegador</span>
+      </div>
+      <div class="tech-item">
+        <span class="emoji">🌐</span>
+        <span class="name">requests + httpx + aiohttp</span>
+        <span class="desc">Clientes HTTP</span>
+      </div>
+      <div class="tech-item">
+        <span class="emoji">🧪</span>
+        <span class="name">Flask</span>
+        <span class="desc">Servidor de coordenadas GPS</span>
+      </div>
+      <div class="tech-item">
+        <span class="emoji">📡</span>
+        <span class="name">http.server</span>
+        <span class="desc">API del dashboard</span>
+      </div>
+      <div class="tech-item">
+        <span class="emoji">📧</span>
+        <span class="name">Himalaya CLI</span>
+        <span class="desc">Cliente email IMAP/SMTP</span>
+      </div>
+      <div class="tech-item">
+        <span class="emoji">🔐</span>
+        <span class="name">python-dotenv</span>
+        <span class="desc">Configuración segura</span>
+      </div>
+      <div class="tech-item">
+        <span class="emoji">⏰</span>
+        <span class="name">crond</span>
+        <span class="desc">Tareas programadas</span>
+      </div>
+      <div class="tech-item">
+        <span class="emoji">🔄</span>
+        <span class="name">runsv (runit)</span>
+        <span class="desc">Supervisor de servicios</span>
+      </div>
+      <div class="tech-item">
+        <span class="emoji">☁️</span>
+        <span class="name">Cloudflare Tunnel</span>
+        <span class="desc">HTTPS público</span>
+      </div>
+      <div class="tech-item">
+        <span class="emoji">📱</span>
+        <span class="name">Termux + PRoot</span>
+        <span class="desc">Linux en Android</span>
+      </div>
+      <div class="tech-item">
+        <span class="emoji">🔑</span>
+        <span class="name">sshd</span>
+        <span class="desc">Acceso remoto seguro</span>
+      </div>
+      <div class="tech-item">
+        <span class="emoji">🔀</span>
+        <span class="name">git + GitHub</span>
+        <span class="desc">Control de versiones</span>
+      </div>
+      <div class="tech-item">
+        <span class="emoji">🔧</span>
+        <span class="name">jq + curl</span>
+        <span class="desc">Utilidades de shell</span>
+      </div>
+      <div class="tech-item">
+        <span class="emoji">🔋</span>
+        <span class="name">termux-api</span>
+        <span class="desc">Batería y wake-lock</span>
+      </div>
+      <div class="tech-item">
+        <span class="emoji">🔍</span>
+        <span class="name">ddgs</span>
+        <span class="desc">Búsqueda web</span>
+      </div>
+      <div class="tech-item">
+        <span class="emoji">📖</span>
+        <span class="name">Tavily</span>
+        <span class="desc">Lectura de páginas web</span>
+      </div>
+      <div class="tech-item">
+        <span class="emoji">🗣️</span>
+        <span class="name">edge-tts</span>
+        <span class="desc">Narración de voz</span>
+      </div>
+      <div class="tech-item">
+        <span class="emoji">📄</span>
+        <span class="name">LibreOffice</span>
+        <span class="desc">Conversión de documentos</span>
+      </div>
+      <div class="tech-item">
+        <span class="emoji">📑</span>
+        <span class="name">poppler · pdftotext</span>
+        <span class="desc">Extracción de PDFs</span>
+      </div>
+      <div class="tech-item">
+        <span class="emoji">👁️</span>
+        <span class="name">Tesseract OCR</span>
+        <span class="desc">Reconocimiento de texto</span>
+      </div>
+      <div class="tech-item">
+        <span class="emoji">🎬</span>
+        <span class="name">FFmpeg</span>
+        <span class="desc">Procesamiento multimedia</span>
+      </div>
+      <div class="tech-item">
+        <span class="emoji">🔎</span>
+        <span class="name">ripgrep</span>
+        <span class="desc">Búsqueda de código</span>
+      </div>
   </div>
 </section>
 
@@ -1245,15 +1360,10 @@
       <span class="layer-label">Servicios</span>
       <div class="items">
         <span class="item highlight">salchipapabot</span>
-        <span class="item highlight">burgerbot</span>
-        <span class="item highlight">papipollobot</span>
-        <span class="item highlight">tacobot</span>
-        <span class="item highlight">papafritabot</span>
         <span class="item highlight">hermes-agent</span>
-        <span class="item">llama-server</span>
+        <span class="item highlight">servidor_web</span>
         <span class="item">servidor_coordenadas</span>
-        <span class="item">cloudflared × 2</span>
-        <span class="item">lacostatech-web</span>
+        <span class="item">cloudflared (túnel + 3 hostnames)</span>
         <span class="item">crond</span>
         <span class="item">sshd</span>
       </div>
@@ -1269,13 +1379,14 @@
     <div class="infra-layer">
       <span class="layer-label">Red</span>
       <div class="items">
-        <span class="item highlight">Telegram API</span>
+        <span class="item highlight">Telegram Bot API</span>
         <span class="item highlight">Cloudflare Tunnel</span>
-        <span class="item">DeepSeek API</span>
+        <span class="item">DeepSeek API · v4 Flash</span>
         <span class="item">DeepSeek-R1 API</span>
         <span class="item">Groq Whisper API</span>
-        <span class="item">llama.cpp API (Llama 3.2)</span>
-        <span class="item">Google Maps API</span>
+        <span class="item">ACIIS · Altura GPS</span>
+        <span class="item">SAP Red Energía (scraper)</span>
+        <span class="item">Google Maps (enlaces)</span>
       </div>
     </div>
   </div>
@@ -1289,20 +1400,20 @@
 
   <div class="stats-grid">
     <div class="stat-card">
-      <div class="num">6</div>
+      <div class="num">2</div>
       <div class="desc">Bots de Telegram activos</div>
     </div>
     <div class="stat-card">
-      <div class="num">11</div>
+      <div class="num">7</div>
       <div class="desc">Servicios runsv gestionados</div>
     </div>
     <div class="stat-card">
-      <div class="num">2</div>
-      <div class="desc">Túneles Cloudflare activos</div>
+      <div class="num">1</div>
+      <div class="desc">Túnel Cloudflare · 3 hostnames</div>
     </div>
     <div class="stat-card">
-      <div class="num">5</div>
-      <div class="desc">Bases SQLite en producción</div>
+      <div class="num">1</div>
+      <div class="desc">Base SQLite en producción</div>
     </div>
     <div class="stat-card">
       <div class="num">24/7</div>

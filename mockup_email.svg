@@ -1,0 +1,38 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 480 340" width="480" height="340">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#1a1b2e"/>
+      <stop offset="100%" stop-color="#0f1020"/>
+    </linearGradient>
+    <linearGradient id="bar" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#2a2b3e"/>
+      <stop offset="100%" stop-color="#1e1f32"/>
+    </linearGradient>
+  </defs>
+  <rect x="0" y="0" width="480" height="340" rx="12" fill="url(#bg)"/>
+  <rect x="0" y="0" width="480" height="40" rx="12" fill="url(#bar)"/>
+  <rect x="0" y="30" width="480" height="10" fill="url(#bar)"/>
+  <circle cx="20" cy="20" r="6" fill="#ff5f57"/>
+  <circle cx="40" cy="20" r="6" fill="#febc2e"/>
+  <circle cx="60" cy="20" r="6" fill="#28c840"/>
+  <text x="240" y="26" text-anchor="middle" fill="#8888aa" font-family="monospace" font-size="12">Resumen de Correos</text>
+  <!-- Email card 1 -->
+  <rect x="15" y="55" width="450" height="60" rx="8" fill="#2a2b45"/>
+  <text x="25" y="74" fill="#66ddaa" font-family="monospace" font-size="12" font-weight="bold">📬 Asunto: Facturación Julio</text>
+  <text x="25" y="92" fill="#aaaacc" font-family="monospace" font-size="10">De: contabilidad@consorcio.art</text>
+  <text x="25" y="107" fill="#8888aa" font-family="monospace" font-size="10">↳ 3 facturas pendientes de pago</text>
+  <!-- Email card 2 -->
+  <rect x="15" y="125" width="450" height="60" rx="8" fill="#2a2b45"/>
+  <text x="25" y="144" fill="#66ddaa" font-family="monospace" font-size="12" font-weight="bold">📬 Asunto: Reporte Semanal</text>
+  <text x="25" y="162" fill="#aaaacc" font-family="monospace" font-size="10">De: operaciones@consorcio.art</text>
+  <text x="25" y="177" fill="#8888aa" font-family="monospace" font-size="10">↳ Instalaciones: 12 | Retiros: 5</text>
+  <!-- Email card 3 -->
+  <rect x="15" y="195" width="450" height="60" rx="8" fill="#2a2b45"/>
+  <text x="25" y="214" fill="#66ddaa" font-family="monospace" font-size="12" font-weight="bold">📬 Asunto: Notificación Incidente</text>
+  <text x="25" y="232" fill="#aaaacc" font-family="monospace" font-size="10">De: soporte@consorcio.art</text>
+  <text x="25" y="247" fill="#8888aa" font-family="monospace" font-size="10">↳ Código: INC-2026-0891</text>
+  <!-- Summary bar -->
+  <rect x="15" y="270" width="450" height="50" rx="8" fill="#1a3a2a"/>
+  <text x="240" y="292" text-anchor="middle" fill="#88ddaa" font-family="monospace" font-size="13" font-weight="bold">✅ Resumen generado — 3 correos procesados</text>
+  <text x="240" y="310" text-anchor="middle" fill="#66bb88" font-family="monospace" font-size="11">2 marcados como urgente · 1 archivado</text>
+</svg>

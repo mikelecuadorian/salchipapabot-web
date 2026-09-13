@@ -341,11 +341,9 @@ def get_reclamos_data():
     """Retorna todos los datos para el dashboard de RECL"""
     where_extra = "AND codigo_cliente = 'RECL'"
 
-    # 1. KPIs (basados en recorrido_cuadrillas JOIN gestion_tramites para
-    #    consistencia con la tabla de detalle)
-    total = query_db(f"""SELECT COUNT(*) as total FROM recorrido_cuadrillas rc
-        INNER JOIN gestion_tramites gt ON rc.numero_tramite = gt.numero_tramite
-        WHERE gt.codigo_cliente = 'RECL'""")
+    # 1. KPIs
+    total = query_db(f"""SELECT COUNT(*) as total FROM recorrido_cuadrillas
+        WHERE cod_motivo_solicitud = 'RECL'""")
     ejecutados = query_db(f"SELECT COUNT(*) as total FROM gestion_tramites WHERE codigo_cliente = 'RECL' AND fecha_ejecucion IS NOT NULL AND fecha_ejecucion != ''")
     pendientes = query_db(f"""SELECT COUNT(*) as total FROM recorrido_cuadrillas rc
         INNER JOIN gestion_tramites gt ON rc.numero_tramite = gt.numero_tramite
@@ -516,15 +514,15 @@ def get_reclamos_data():
 
 def get_reclamos_detalle(dia=None, cuadrilla=None, desde=None, hasta=None):
     """Retorna la lista detallada de trámites RECL con observacion_gestion, filtrable
-    por dia exacto O rango de fechas (desde/hasta) sobre rc.fecha_ejecucion"""
-    where = ["gt.codigo_cliente = 'RECL'"]
+    por dia exacto O rango de fechas (desde/hasta) sobre rc.fecha_analisis"""
+    where = ["rc.cod_motivo_solicitud = 'RECL'"]
 
     if dia:
-        where.append(f"date(rc.fecha_ejecucion) = '{dia}'")
+        where.append(f"date(rc.fecha_analisis) = '{dia}'")
     if desde:
-        where.append(f"date(rc.fecha_ejecucion) >= '{desde}'")
+        where.append(f"date(rc.fecha_analisis) >= '{desde}'")
     if hasta:
-        where.append(f"date(rc.fecha_ejecucion) <= '{hasta}'")
+        where.append(f"date(rc.fecha_analisis) <= '{hasta}'")
     if cuadrilla:
         # Escape simple para SQL
         c = cuadrilla.replace("'", "''")
@@ -548,8 +546,9 @@ def get_reclamos_detalle(dia=None, cuadrilla=None, desde=None, hasta=None):
     """)
 
     # ── KPIs filtrados (respetan los mismos filtros) ──
-    total_f = query_db(f"SELECT COUNT(*) as t FROM recorrido_cuadrillas rc INNER JOIN gestion_tramites gt ON rc.numero_tramite = gt.numero_tramite WHERE {where_clause}")
-    # EJECUTADOS usa gestion_tramites directo (solo esa tarjeta) — reconstruir clausula con gt.
+    # TOTAL: recorrido_cuadrillas por cod_motivo_solicitud + rango fecha_analisis
+    total_f = query_db(f"SELECT COUNT(*) as t FROM recorrido_cuadrillas rc WHERE {where_clause}")
+    # EJECUTADOS: gestion_tramites por codigo_cliente + rango por fecha_ejecucion (cuando se ejecutó)
     where_gt = ["gt.codigo_cliente = 'RECL'"]
     if dia:
         where_gt.append(f"date(gt.fecha_ejecucion) = '{dia}'")
@@ -562,10 +561,11 @@ def get_reclamos_detalle(dia=None, cuadrilla=None, desde=None, hasta=None):
         where_gt.append(f"gt.cuadrilla = '{c}'")
     where_clause_gt = " AND ".join(where_gt)
     eje_f = query_db(f"SELECT COUNT(*) as t FROM gestion_tramites gt WHERE {where_clause_gt} AND gt.fecha_ejecucion IS NOT NULL AND gt.fecha_ejecucion != ''")
-    pen_f = query_db(f"SELECT COUNT(*) as t FROM recorrido_cuadrillas rc INNER JOIN gestion_tramites gt ON rc.numero_tramite = gt.numero_tramite WHERE {where_clause} AND (rc.fecha_ejecucion IS NULL OR rc.fecha_ejecucion = '')")
-    prom_f = query_db(f"SELECT round(avg(rc.dias_transcurridos),1) as p FROM recorrido_cuadrillas rc INNER JOIN gestion_tramites gt ON rc.numero_tramite = gt.numero_tramite WHERE {where_clause} AND rc.dias_transcurridos IS NOT NULL")
-    cuad_f = query_db(f"SELECT COUNT(DISTINCT rc.cuadrilla) as c FROM recorrido_cuadrillas rc INNER JOIN gestion_tramites gt ON rc.numero_tramite = gt.numero_tramite WHERE {where_clause} AND rc.cuadrilla IS NOT NULL AND rc.cuadrilla != ''")
-    parr_f = query_db(f"SELECT COUNT(DISTINCT rc.parroquia) as c FROM recorrido_cuadrillas rc INNER JOIN gestion_tramites gt ON rc.numero_tramite = gt.numero_tramite WHERE {where_clause} AND rc.parroquia IS NOT NULL AND rc.parroquia != ''")
+    # PENDIENTES: recorrido_cuadrillas sin fecha_ejecucion + mismo rango de analisis
+    pen_f = query_db(f"SELECT COUNT(*) as t FROM recorrido_cuadrillas rc WHERE {where_clause} AND (rc.fecha_ejecucion IS NULL OR rc.fecha_ejecucion = '')")
+    prom_f = query_db(f"SELECT round(avg(rc.dias_transcurridos),1) as p FROM recorrido_cuadrillas rc WHERE {where_clause} AND rc.dias_transcurridos IS NOT NULL")
+    cuad_f = query_db(f"SELECT COUNT(DISTINCT rc.cuadrilla) as c FROM recorrido_cuadrillas rc WHERE {where_clause} AND rc.cuadrilla IS NOT NULL AND rc.cuadrilla != ''")
+    parr_f = query_db(f"SELECT COUNT(DISTINCT rc.parroquia) as c FROM recorrido_cuadrillas rc WHERE {where_clause} AND rc.parroquia IS NOT NULL AND rc.parroquia != ''")
 
     tot_f = total_f[0]["t"] if total_f else 0
     eje_f_v = eje_f[0]["t"] if eje_f else 0
@@ -995,7 +995,7 @@ class APIHandler(SimpleHTTPRequestHandler):
         self.wfile.write(json.dumps(data, ensure_ascii=False).encode("utf-8"))
 
     def get_system_info(self):
-        import subprocess, os
+        import subprocess, os, re
         info = {}
         # Uptimes
         try:
@@ -1016,12 +1016,26 @@ class APIHandler(SimpleHTTPRequestHandler):
                     info["uptime"] = f"{days}d {hours}h {mins}m"
             except:
                 info["uptime"] = "N/A"
-        # Android uptime
+        # Uptime del framework Android (system_server).
+        # `sys.system_server.start_uptime` NO es una duracion: es una MARCA DE
+        # TIEMPO en MILISEGUNDOS sobre el reloj de arranque (equivale a
+        # SystemClock.elapsedRealtime() en el instante en que arranco
+        # system_server). Hay que RESTARLA del uptime actual del dispositivo:
+        #     uptime_android = CLOCK_BOOTTIME_ahora - start_uptime/1000
+        # Interpretarla como segundos da un valor absurdo (20023 -> "5h 33m" en
+        # un equipo con 31 dias de uptime, cuando son 20 s: el desfase tipico
+        # de un arranque normal).
+        # Utilidad: si system_server se cae y Android reinicia el framework
+        # (soft reboot: el kernel NUNCA se apaga), el uptime del dispositivo
+        # sigue subiendo pero este vuelve a ~0. Si ambos coinciden, no ha
+        # habido soft reboot. Es un detector de reinicio del framework.
         try:
             import subprocess
             r = subprocess.run(["getprop", "sys.system_server.start_uptime"], capture_output=True, text=True, timeout=3)
             if r.returncode == 0 and r.stdout.strip():
-                sec = int(r.stdout.strip())
+                start_ms = int(r.stdout.strip())
+                boot_now = time.clock_gettime(time.CLOCK_BOOTTIME)
+                sec = max(0.0, boot_now - (start_ms / 1000.0))
                 d = int(sec // 86400)
                 h = int((sec % 86400) // 3600)
                 m = int((sec % 3600) // 60)
@@ -1039,18 +1053,31 @@ class APIHandler(SimpleHTTPRequestHandler):
             info["server_uptime"] = f"{d}d {h}h {m}m"
         except:
             info["server_uptime"] = "N/A"
-        # Carga CPU
+        # Carga del sistema.
+        # Android BLOQUEA /proc/loadavg, /proc/stat y /proc/uptime desde Termux
+        # (PermissionError). El comando `uptime` obtiene la carga por syscall y
+        # SI funciona, asi que se parsea su salida. Si falla, se marca.
+        info["ncpu"] = os.cpu_count() or 1
         try:
-            with open("/proc/loadavg") as f:
-                parts = f.read().split()
-                info["load_1m"] = parts[0]
-                info["load_5m"] = parts[1]
-                info["load_15m"] = parts[2]
-            ncpu = os.cpu_count() or 1
-            info["cpu_pct"] = round(float(parts[0]) / ncpu * 100, 1)
-        except:
+            r = subprocess.run(["uptime"], capture_output=True, text=True, timeout=5)
+            m = re.search(r"load average[s]?:\s*([\d.]+)[,\s]+([\d.]+)[,\s]+([\d.]+)", r.stdout or "")
+            if not m:
+                raise ValueError("salida de uptime no reconocida")
+            l1, l5, l15 = (float(x) for x in m.groups())
+            info["load_1m"] = round(l1, 2)
+            info["load_5m"] = round(l5, 2)
+            info["load_15m"] = round(l15, 2)
+            # Carga normalizada por nucleo. NO es CPU% real: la carga incluye
+            # procesos en espera de E/S (relevante con el overhead de PRoot).
+            info["cpu_pct"] = round(l1 / info["ncpu"] * 100, 1)
+            info["cpu_pct_available"] = True
+        except Exception as e:
             info["cpu_pct"] = 0
-            info["load_1m"] = "0"
+            info["load_1m"] = 0
+            info["load_5m"] = 0
+            info["load_15m"] = 0
+            info["cpu_pct_available"] = False
+            info["_load_error"] = str(e)
         # RAM
         try:
             with open("/proc/meminfo") as f:
@@ -1084,7 +1111,8 @@ class APIHandler(SimpleHTTPRequestHandler):
         # Servicios runsv - leer directo de supervise/stat + verificar PID
         try:
             SVDIR = "/data/data/com.termux/files/usr/var/service"
-            svcs = ["salchipapabot", "papafritabot", "burgerbot", "servidor_web", "sshd_custom", "cloudflared", "hermes"]
+            svcs = ["salchipapabot", "servidor_web", "sshd_custom", "cloudflared",
+                    "hermes", "hermes_medicina", "hermes_nutricion"]
             servicios = []
             for s in svcs:
                 stat_path = f"{SVDIR}/{s}/supervise/stat"
@@ -1105,7 +1133,9 @@ class APIHandler(SimpleHTTPRequestHandler):
                             estado = "down"
                 except:
                     pass
-                servicios.append({"name": s, "status": estado, "pid": pid})
+                # No exponer PID de un servicio caido: el valor de supervise/pid
+                # queda viejo y el dashboard mostraba un PID fantasma.
+                servicios.append({"name": s, "status": estado, "pid": pid if estado == "up" else ""})
             info["servicios"] = servicios
         except:
             info["servicios"] = []
@@ -1120,35 +1150,47 @@ class APIHandler(SimpleHTTPRequestHandler):
             info["hostname"] = os.uname().nodename
         except:
             info["hostname"] = "unknown"
-        # Cron jobs
+        # Cron jobs: se leen directo los jobs.json de Hermes.
+        # OJO: el servidor web corre en TERMUX NATIVO, donde /root NO existe
+        # (es el home de PRoot). Los archivos se alcanzan via la ruta del rootfs.
         try:
-            r = subprocess.run(["/usr/local/lib/hermes-agent/venv/bin/hermes", "cron", "list"], capture_output=True, text=True, timeout=10)
+            ROOTFS = ("/data/data/com.termux/files/usr/var/lib/"
+                      "proot-distro/containers/ubuntu/rootfs")
+            HERMES_DIR = ROOTFS + "/root/.hermes"
+            fuentes = [("principal", HERMES_DIR + "/cron/jobs.json")]
+            pdir = HERMES_DIR + "/profiles"
+            if os.path.isdir(pdir):
+                for nombre in sorted(os.listdir(pdir)):
+                    fuentes.append((nombre, f"{pdir}/{nombre}/cron/jobs.json"))
             crons = []
-            current = {}
-            for line in r.stdout.split("\n"):
-                line_stripped = line.strip()
-                if line_stripped.startswith("Name:"):
-                    current["name"] = line_stripped.split(":", 1)[1].strip()
-                elif line_stripped.startswith("Schedule:"):
-                    current["schedule"] = line_stripped.split(":", 1)[1].strip()
-                elif line_stripped.startswith("Next run:"):
-                    current["next_run"] = line_stripped.split(":", 1)[1].strip()
-                elif line_stripped.startswith("Last run:"):
-                    current["last_run"] = line_stripped.split(":", 1)[1].strip()
-                elif line_stripped.startswith("Mode:"):
-                    current["mode"] = line_stripped.split(":", 1)[1].strip()
-                elif line_stripped.startswith("Script:"):
-                    current["script"] = line_stripped.split(":", 1)[1].strip()
-                elif line_stripped.startswith("Deliver:"):
-                    current["deliver"] = line_stripped.split(":", 1)[1].strip()
-                elif "active" in line_stripped or "paused" in line_stripped:
-                    if current.get("name"):
-                        crons.append(current)
-                    current = {}
-            if current.get("name"):
-                crons.append(current)
+            for perfil, ruta in fuentes:
+                try:
+                    with open(ruta) as f:
+                        data = json.load(f)
+                except Exception:
+                    continue
+                jobs = data.get("jobs", []) if isinstance(data, dict) else data
+                for j in jobs:
+                    sched = j.get("schedule") or {}
+                    rep = j.get("repeat") or {}
+                    ultima = (j.get("last_run_at") or "")[:16].replace("T", " ")
+                    estado_ult = j.get("last_status") or ""
+                    ultima = (ultima + " " + estado_ult).strip() if ultima else "—"
+                    siguiente = (j.get("next_run_at") or "")[:16].replace("T", " ") or "—"
+                    crons.append({
+                        "name": j.get("name") or "(sin nombre)",
+                        "perfil": perfil,
+                        "schedule": sched.get("display") or sched.get("expr") or "—",
+                        "next_run": siguiente,
+                        "last_run": ultima,
+                        "script": j.get("script") or "",
+                        "mode": "sin LLM" if j.get("no_agent") else "agente",
+                        "deliver": j.get("deliver") or "",
+                        "enabled": bool(j.get("enabled", True)),
+                        "runs": rep.get("completed", 0),
+                    })
             info["crons"] = crons
-            info["_cron_debug"] = f"parsed={len(crons)} lines={len(r.stdout.split(chr(10)))} rc={r.returncode}"
+            info["_cron_debug"] = f"leidos={len(crons)} de {len(fuentes)} perfiles"
         except Exception as e:
             info["crons"] = []
             info["_cron_debug"] = f"error: {e}"
