@@ -25,3 +25,16 @@ campos_gestion_tramites.csv
 # Python cache
 __pycache__/
 *.pyc
+
+# Backups locales (nunca versionar)
+*.bak-*
+*.bak_*
+
+# Bases de datos (los datos no van al repo)
+*.db
+*.db-wal
+*.db-shm
+
+# Reportes generados
+ordenes_previas_julio.csv
+tramites_recl.xlsx

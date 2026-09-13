@@ -42,7 +42,7 @@ h1{font-size:1.5rem;font-weight:700;margin-bottom:4px;background:linear-gradient
   <div class="card"><h3>📱 Dispositivo</h3><div class="val accent" id="uptime">—</div><div class="label">Encendido desde (kernel)</div></div>
   <div class="card"><h3>⚙️ Android</h3><div class="val accent" id="android-uptime">—</div><div class="label">Servicios del sistema</div></div>
   <div class="card"><h3>🌐 Servidor web</h3><div class="val accent" id="server-uptime">—</div><div class="label" id="hostname">API corriendo</div></div>
-  <div class="card"><h3>CPU</h3><div class="val blue" id="cpu-val">—</div><div class="label" id="cpu-label"></div><div class="bar"><div class="bar-fill" id="cpu-bar" style="width:0%"></div></div></div>
+  <div class="card"><h3>⚖️ Carga del sistema</h3><div class="val blue" id="cpu-val">—</div><div class="label" id="cpu-label"></div><div class="bar"><div class="bar-fill" id="cpu-bar" style="width:0%"></div></div></div>
   <div class="card"><h3>RAM</h3><div class="val green" id="ram-val">—</div><div class="label" id="ram-label"></div><div class="bar"><div class="bar-fill" id="ram-bar" style="width:0%"></div></div></div>
   <div class="card"><h3>Disco</h3><div class="val yellow" id="disk-val">—</div><div class="label" id="disk-label"></div><div class="bar"><div class="bar-fill" id="disk-bar" style="width:0%"></div></div></div>
   <div class="card"><h3>BD Medidores</h3><div class="val accent" id="db-size">—</div><div class="label">SQLite</div></div>
@@ -73,14 +73,25 @@ async function loadData(){
     // Server uptime
     document.getElementById('server-uptime').textContent=d.server_uptime||'N/A';
     
-    // CPU %
+    // Carga del sistema (load average).
+    // Android BLOQUEA /proc/stat y /proc/loadavg, asi que NO se puede medir
+    // CPU% real: la API entrega la carga normalizada por nucleo. Ojo: la carga
+    // incluye procesos esperando E/S, por eso valores >100% son normales aqui.
     const cp=d.cpu_pct||0;
-    document.getElementById('cpu-val').textContent=cp+'%';
-    document.getElementById('cpu-label').textContent='Carga 1m: '+d.load_1m+' · 8 núcleos';
+    const n=d.ncpu||8;
+    const cv=document.getElementById('cpu-val');
+    if(d.cpu_pct_available===false){
+      cv.textContent='N/D';
+      document.getElementById('cpu-label').textContent='No se pudo leer la carga';
+    }else{
+      cv.textContent=d.load_1m;
+      document.getElementById('cpu-label').textContent=
+        '1m '+d.load_1m+' · 5m '+d.load_5m+' · 15m '+d.load_15m+' · '+n+' núcleos';
+    }
     const cb=document.getElementById('cpu-bar');
     cb.style.width=Math.min(cp,100)+'%';
-    cb.className='bar-fill '+(cp>80?'red':cp>50?'orange':cp>30?'yellow':'green');
-    document.getElementById('cpu-val').className='val '+(cp>80?'red':cp>50?'orange':cp>30?'yellow':'blue');
+    cb.className='bar-fill '+(cp>200?'red':cp>150?'orange':cp>100?'yellow':'green');
+    cv.className='val '+(cp>200?'red':cp>150?'orange':cp>100?'yellow':'blue');
     
     // RAM
     const rp=d.ram_pct;
@@ -132,17 +143,26 @@ async function loadData(){
     
     // Crons
     const cg=document.getElementById('cron-grid');
-    cg.innerHTML=d.crons.map(c=>{
+    const crons=d.crons||[];
+    if(!crons.length){
+      cg.innerHTML='<div class="cron-card" style="color:var(--text2)">No hay cron jobs programados.</div>';
+    }else{
+    cg.innerHTML=crons.map(c=>{
       const last=c.last_run||'—';
-      const ok=last.includes('ok');
-      return '<div class="cron-card"><div class="cron-name">'+c.name+'</div>'+
+      const nunca=(last==='—');
+      const fallo=/error|fail/i.test(last);
+      // Nunca ejecutado = neutro (no rojo): un cron recien creado no es un fallo.
+      const clase=nunca?'':(fallo?'cron-err':'cron-ok');
+      const perfil=(c.perfil&&c.perfil!=='principal')?' <span style="opacity:.55;font-size:.68rem">· '+c.perfil+'</span>':'';
+      return '<div class="cron-card"><div class="cron-name">'+c.name+perfil+'</div>'+
         '<div class="cron-row"><span class="cron-label">⏱</span><span class="cron-val">'+c.schedule+'</span></div>'+
         '<div class="cron-row"><span class="cron-label">Próxima</span><span class="cron-val">'+(c.next_run||'—')+'</span></div>'+
-        '<div class="cron-row"><span class="cron-label">Última</span><span class="cron-val '+(ok?'cron-ok':'cron-err')+'">'+last+'</span></div>'+
+        '<div class="cron-row"><span class="cron-label">Última</span><span class="cron-val '+clase+'">'+last+(c.runs?' · '+c.runs+'×':'')+'</span></div>'+
         (c.script?'<div class="cron-row"><span class="cron-label">Script</span><span class="cron-val">'+c.script+'</span></div>':'')+
         (c.mode?'<div class="cron-row"><span class="cron-label">Modo</span><span class="cron-val">'+c.mode+'</span></div>':'')+
         '</div>';
     }).join('');
+    }
     
   }catch(e){
     document.getElementById('subtext').innerHTML='<span style="color:var(--red)">⚠️ Error al cargar datos</span>';

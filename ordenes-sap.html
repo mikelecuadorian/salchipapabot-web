@@ -32,14 +32,21 @@
     margin-bottom: 20px;
   }
   .filters label { font-size: 12px; font-weight: 600; color: #94a3b8; text-transform: uppercase; letter-spacing: .05em; }
-  .filters select {
+  .filters input[type="date"] {
     background: #1a1f35; color: #e0e6f0; border: 1px solid #2a2a3a; border-radius: 8px;
     padding: 6px 12px; font-size: 13px; font-family: 'Inter', sans-serif;
-    cursor: pointer; outline: none;
+    cursor: pointer; outline: none; color-scheme: dark;
   }
-  .filters select:hover { border-color: #60a5fa; }
-  .filters select:focus { border-color: #60a5fa; }
+  .filters input[type="date"]:hover { border-color: #60a5fa; }
+  .filters input[type="date"]:focus { border-color: #60a5fa; }
   .filters .period-label { font-size: 12px; color: #64748b; margin-left: 4px; }
+  .filters .btn {
+    background: linear-gradient(135deg, #2563eb, #7c3aed);
+    color: #fff; border: none; border-radius: 8px;
+    padding: 6px 18px; font-size: 13px; font-weight: 600; font-family: 'Inter', sans-serif;
+    cursor: pointer; transition: opacity .2s;
+  }
+  .filters .btn:hover { opacity: .85; }
   .kpi-grid {
     display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
     gap: 16px; margin-bottom: 20px;
@@ -89,53 +96,52 @@
   </div>
 </div>
 
-<!-- FILTRO POR DÍA -->
+<!-- FILTRO POR RANGO DE FECHAS -->
 <div class="filters">
-  <label>📅 Día</label>
-  <select id="filterDay" onchange="applyFilter()">
-    <option value="all">Todos los días</option>
-    <option value="2026-07-02">02 Jul 2026</option>
-    <option value="2026-07-03">03 Jul 2026</option>
-  </select>
-  <span class="period-label" id="periodLabel">Mostrando: Todos los días</span>
+  <label>📅 Desde</label>
+  <input type="date" id="filterDesde" onchange="aplicarFiltro()">
+  <label>📅 Hasta</label>
+  <input type="date" id="filterHasta" onchange="aplicarFiltro()">
+  <button class="btn" onclick="aplicarFiltro()">Aplicar</button>
+  <span class="period-label" id="periodLabel">Cargando...</span>
 </div>
 
 <!-- KPI CARDS -->
 <div class="kpi-grid">
   <div class="kpi-card" style="--accent:#60a5fa">
     <div class="label">📋 Total Órdenes</div>
-    <div class="value" id="kpiTotal">510</div>
-    <div class="sub">En base de datos</div>
+    <div class="value" id="kpiTotal">—</div>
+    <div class="sub">En el período seleccionado</div>
   </div>
   <div class="kpi-card" style="--accent:#fbbf24">
     <div class="label">⏳ Por Asignar</div>
-    <div class="value" id="kpiAsignar">112</div>
+    <div class="value" id="kpiAsignar">—</div>
     <div class="sub">Esperando asignación</div>
   </div>
   <div class="kpi-card" style="--accent:#34d399">
     <div class="label">🔧 En Tratamiento</div>
-    <div class="value" id="kpiTratamiento">255</div>
+    <div class="value" id="kpiTratamiento">—</div>
     <div class="sub">Asignadas a digitadoras</div>
   </div>
   <div class="kpi-card" style="--accent:#f87171">
     <div class="label">🔒 Cierre Técnico</div>
-    <div class="value" id="kpiCierreTecnico">143</div>
+    <div class="value" id="kpiCierreTecnico">—</div>
     <div class="sub">Cerradas técnicamente</div>
   </div>
   <div class="kpi-card" style="--accent:#f472b6">
     <div class="label">🔄 Cambios de Estado</div>
-    <div class="value" id="kpiCambios">257</div>
-    <div class="sub">Registrados</div>
+    <div class="value" id="kpiCambios">—</div>
+    <div class="sub">Registrados en el período</div>
   </div>
   <div class="kpi-card" style="--accent:#a78bfa">
     <div class="label">📅 Capturadas hoy</div>
-    <div class="value" id="kpiHoy">111</div>
-    <div class="sub">03 Julio 2026</div>
+    <div class="value" id="kpiHoy">—</div>
+    <div class="sub" id="subHoy">—</div>
   </div>
   <div class="kpi-card" style="--accent:#74b9ff">
     <div class="label">🌍 Cantones</div>
-    <div class="value" id="kpiCantones">6</div>
-    <div class="sub" id="subCantones">Samborondón, Durán, Daule +</div>
+    <div class="value" id="kpiCantones">—</div>
+    <div class="sub" id="subCantones">—</div>
   </div>
 </div>
 
@@ -152,7 +158,7 @@
 </div>
 
 <div class="footer">
-  Consorcio Normalización ART · Datos extraídos vía scraper SAP Web · Último scrape: 03 Jul 2026
+  Consorcio Normalización ART · Datos extraídos vía scraper SAP Web · Último scrape: <span id="footerScrapeDate">—</span>
 </div>
 
 <script>
@@ -162,121 +168,205 @@ Chart.defaults.font.family = 'Inter, sans-serif';
 let DATA = null;
 let captureChart, changesChart, stateChart;
 
+// --- Utilidad: sumar slice de un array ---
+function sumSlice(arr, start, end) {
+  return arr.slice(start, end + 1).reduce((a, b) => a + b, 0);
+}
+
 // --- Cargar datos desde la API ---
 async function cargarDatos() {
   try {
     const resp = await fetch('/api/ordenes-sap');
     DATA = await resp.json();
-    initFiltros();
-    aplicarFiltro();
+    initFechas();
     renderActividades();
+    document.getElementById('footerScrapeDate').textContent = new Date().toLocaleDateString('es-EC', {
+      year: 'numeric', month: 'short', day: 'numeric'
+    });
   } catch(e) {
     document.getElementById('periodLabel').textContent = '❌ Error cargando datos: ' + e.message;
   }
 }
 
-// --- Inicializar filtro de días ---
-function initFiltros() {
-  const sel = document.getElementById('filterDay');
-  // Limpiar opciones existentes
-  sel.innerHTML = '<option value="all">Todos los días</option>';
-  DATA.dias.forEach((d, i) => {
-    const opt = document.createElement('option');
-    opt.value = d;
-    opt.textContent = DATA.labels[i];
-    sel.appendChild(opt);
-  });
+// --- Inicializar fechas ---
+function initFechas() {
+  const desde = document.getElementById('filterDesde');
+  const hasta = document.getElementById('filterHasta');
+  const min = DATA.dias[0];
+  const max = DATA.dias[DATA.dias.length - 1];
+  desde.value = min;
+  hasta.value = max;
+  desde.min = min;
+  desde.max = max;
+  hasta.min = min;
+  hasta.max = max;
+  aplicarFiltro();
 }
 
 function aplicarFiltro() {
-  const day = document.getElementById('filterDay').value;
-  const isAll = day === 'all';
+  const desde = document.getElementById('filterDesde').value;
+  const hasta = document.getElementById('filterHasta').value;
 
-  // KPI totals
-  let total, porAsig, enTrat, cierreTec, cambios, idx;
-  if (isAll) {
-    total = DATA.dayTotal.reduce((a,b)=>a+b, 0);
-    porAsig = DATA.dayPorAsignar.reduce((a,b)=>a+b, 0);
-    enTrat = DATA.dayEnTratamiento.reduce((a,b)=>a+b, 0);
-    cierreTec = DATA.dayCierreTecnico.reduce((a,b)=>a+b, 0);
-    cambios = DATA.dayCambios.reduce((a,b)=>a+b, 0);
-  } else {
-    idx = DATA.dias.indexOf(day);
-    total = DATA.dayTotal[idx];
-    porAsig = DATA.dayPorAsignar[idx];
-    enTrat = DATA.dayEnTratamiento[idx];
-    cierreTec = DATA.dayCierreTecnico[idx];
-    cambios = DATA.dayCambios[idx];
+  if (!desde || !hasta) return;
+
+  // Buscar índices en el array de días
+  const startIdx = DATA.dias.indexOf(desde);
+  const endIdx = DATA.dias.indexOf(hasta);
+
+  if (startIdx === -1 || endIdx === -1 || startIdx > endIdx) {
+    document.getElementById('periodLabel').textContent = '⚠️ Rango inválido';
+    return;
   }
 
+  // Días y labels del rango
+  const rangeDias = DATA.dias.slice(startIdx, endIdx + 1);
+  const rangeLabels = DATA.labels.slice(startIdx, endIdx + 1);
+  const numDias = rangeDias.length;
+  const isSingleDay = numDias === 1;
+
+  // Sumar KPIs
+  const total = sumSlice(DATA.dayTotal, startIdx, endIdx);
+  const porAsig = sumSlice(DATA.dayPorAsignar, startIdx, endIdx);
+  const enTrat = sumSlice(DATA.dayEnTratamiento, startIdx, endIdx);
+  const cierreTec = sumSlice(DATA.dayCierreTecnico, startIdx, endIdx);
+  const cambios = sumSlice(DATA.dayCambios, startIdx, endIdx);
+
+  // Actualizar KPIs
   document.getElementById('kpiTotal').textContent = total;
   document.getElementById('kpiAsignar').textContent = porAsig;
   document.getElementById('kpiTratamiento').textContent = enTrat;
   document.getElementById('kpiCierreTecnico').textContent = cierreTec;
   document.getElementById('kpiCambios').textContent = cambios;
   document.getElementById('kpiHoy').textContent = DATA.capturadasHoy;
-  document.getElementById('periodLabel').textContent =
-    isAll ? 'Mostrando: Todos los días' : 'Mostrando: ' + DATA.labels[idx];
 
-  // Cantones
-  const cantones = DATA.cantonesDia[day] || DATA.cantonesDia.all;
-  const maxCanton = Math.max(...cantones.map(c => c.tot));
+  // Formatear fecha capturadas hoy
+  const hoy = new Date();
+  document.getElementById('subHoy').textContent = hoy.toLocaleDateString('es-EC', {
+    year: 'numeric', month: 'long', day: 'numeric'
+  });
+
+  // Period label
+  const fmtDesde = new Date(desde + 'T00:00:00').toLocaleDateString('es-EC', { day: 'numeric', month: 'short', year: 'numeric' });
+  const fmtHasta = new Date(hasta + 'T00:00:00').toLocaleDateString('es-EC', { day: 'numeric', month: 'short', year: 'numeric' });
+  document.getElementById('periodLabel').textContent =
+    isSingleDay
+      ? `📅 ${fmtDesde} (${total} órdenes)`
+      : `📅 ${fmtDesde} → ${fmtHasta} (${numDias} días, ${total} órdenes)`;
+
+  // --- Cantones (agregados del rango) ---
+  const cantonMap = {};
+  rangeDias.forEach(d => {
+    const cants = DATA.cantonesDia[d] || [];
+    cants.forEach(c => {
+      cantonMap[c.nom] = (cantonMap[c.nom] || 0) + c.tot;
+    });
+  });
+  const cantones = Object.entries(cantonMap)
+    .map(([nom, tot]) => ({ nom, tot }))
+    .sort((a, b) => b.tot - a.tot);
+  const maxCanton = cantones.length > 0 ? Math.max(...cantones.map(c => c.tot)) : 1;
   const colors = ['#60a5fa','#34d399','#fbbf24','#f472b6','#a78bfa','#64748b'];
-  const totalCant = cantones.reduce((a,c) => a + c.tot, 0);
+  const totalCant = cantones.reduce((a, c) => a + c.tot, 0);
+
   document.getElementById('kpiCantones').textContent = cantones.length;
-  document.getElementById('subCantones').textContent = cantones.slice(0,3).map(c => c.nom).join(', ') + ' +';
+  document.getElementById('subCantones').textContent =
+    cantones.length > 0
+      ? cantones.slice(0, 3).map(c => c.nom).join(', ') + ' +'
+      : 'Sin datos';
+
   document.getElementById('cantonTable').innerHTML =
     `<tr><th>Cantón</th><th class="num">Órdenes</th><th></th><th class="num">%</th></tr>` +
     cantones.map((c, i) =>
-      `<tr><td>${c.nom}</td><td class="num">${c.tot}</td><td style="width:120px"><div class="bar-bg"><div class="bar-fill" style="width:${(c.tot/maxCanton*100).toFixed(0)}%;background:${colors[i]}"></div></div></td><td class="num" style="color:#64748b">${((c.tot/totalCant)*100).toFixed(1)}%</td></tr>`
+      `<tr><td>${c.nom}</td><td class="num">${c.tot}</td><td style="width:120px"><div class="bar-bg"><div class="bar-fill" style="width:${(c.tot / maxCanton * 100).toFixed(0)}%;background:${colors[i % colors.length]}"></div></div></td><td class="num" style="color:#64748b">${((c.tot / totalCant) * 100).toFixed(1)}%</td></tr>`
     ).join('');
 
-  // Charts
+  // --- Charts ---
+
+  // Capturas por día (barras para cada día del rango)
   if (captureChart) captureChart.destroy();
   captureChart = new Chart(document.getElementById('captureChart'), {
     type: 'bar',
     data: {
-      labels: isAll ? DATA.labels : [DATA.labels[idx]],
+      labels: rangeLabels,
       datasets: [{
         label: 'Órdenes capturadas',
-        data: isAll ? DATA.dayTotal : [total],
-        backgroundColor: isAll ? ['rgba(96,165,250,.7)','rgba(167,139,250,.7)'] : ['rgba(96,165,250,.7)'],
-        borderColor: isAll ? ['#60a5fa','#a78bfa'] : ['#60a5fa'],
-        borderWidth: 1, borderRadius: 4
+        data: DATA.dayTotal.slice(startIdx, endIdx + 1),
+        backgroundColor: isSingleDay
+          ? ['rgba(96,165,250,.7)']
+          : rangeLabels.map((_, i) =>
+              `hsla(${220 + i * 15}, 70%, ${55 + i % 3 * 5}%, .7)`
+            ),
+        borderColor: '#60a5fa',
+        borderWidth: isSingleDay ? 1 : 0,
+        borderRadius: 4
       }]
     },
     options: {
       responsive: true, maintainAspectRatio: false,
-      plugins: { legend: { display: false } },
-      scales: { x: { grid: { color: '#1e293b' } }, y: { grid: { color: '#1e293b' }, beginAtZero: true } }
+      plugins: {
+        legend: { display: false },
+        tooltip: {
+          callbacks: {
+            title: items => items[0].label + ' ' + (() => {
+              const idx = rangeLabels.indexOf(items[0].label);
+              if (idx >= 0) {
+                const d = rangeDias[idx];
+                return '(' + new Date(d + 'T00:00:00').toLocaleDateString('es-EC', { weekday: 'short' }) + ')';
+              }
+              return '';
+            })()
+          }
+        }
+      },
+      scales: {
+        x: { grid: { color: '#1e293b' }, ticks: { maxRotation: 45, font: { size: 10 } } },
+        y: { grid: { color: '#1e293b' }, beginAtZero: true }
+      }
     }
   });
 
+  // Cambios de estado por día
   if (changesChart) changesChart.destroy();
   changesChart = new Chart(document.getElementById('changesChart'), {
     type: 'bar',
     data: {
-      labels: isAll ? DATA.labels : [DATA.labels[idx]],
+      labels: rangeLabels,
       datasets: [{
         label: 'Cambios de estado',
-        data: isAll ? DATA.dayCambios : [cambios],
+        data: DATA.dayCambios.slice(startIdx, endIdx + 1),
         backgroundColor: 'rgba(244,114,182,.7)',
         borderColor: '#f472b6',
-        borderWidth: 1, borderRadius: 4
+        borderWidth: isSingleDay ? 1 : 0,
+        borderRadius: 4
       }]
     },
     options: {
       responsive: true, maintainAspectRatio: false,
-      plugins: { legend: { display: false } },
-      scales: { x: { grid: { color: '#1e293b' } }, y: { grid: { color: '#1e293b' }, beginAtZero: true } }
+      plugins: {
+        legend: { display: false },
+        tooltip: {
+          callbacks: {
+            title: items => items[0].label
+          }
+        }
+      },
+      scales: {
+        x: { grid: { color: '#1e293b' }, ticks: { maxRotation: 45, font: { size: 10 } } },
+        y: { grid: { color: '#1e293b' }, beginAtZero: true }
+      }
     }
   });
 
+  // Estado general (doughnut - totales del rango)
   if (stateChart) stateChart.destroy();
   stateChart = new Chart(document.getElementById('stateChart'), {
     type: 'doughnut',
     data: {
-      labels: ['En Tratamiento (' + enTrat + ')', 'Por Asignar (' + porAsig + ')', 'Cierre Técnico (' + cierreTec + ')'],
+      labels: [
+        'En Tratamiento (' + enTrat + ')',
+        'Por Asignar (' + porAsig + ')',
+        'Cierre Técnico (' + cierreTec + ')'
+      ],
       datasets: [{
         data: [enTrat, porAsig, cierreTec],
         backgroundColor: ['rgba(52,211,153,.8)', 'rgba(251,191,36,.8)', 'rgba(248,113,113,.8)'],
@@ -290,9 +380,6 @@ function aplicarFiltro() {
     }
   });
 }
-
-// Renombrar la función para compatibilidad con el HTML
-const applyFilter = aplicarFiltro;
 
 // --- Últimas Actividades ---
 function renderActividades() {
