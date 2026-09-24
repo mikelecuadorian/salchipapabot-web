@@ -1,0 +1,307 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Trámites por Cuadrilla · Consorcio ART</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: 'Inter', sans-serif; background: #0a0e1a; color: #e0e6f0; padding: 24px; min-height: 100vh; }
+  .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; flex-wrap: wrap; gap: 12px; }
+  .header h1 { font-size: 26px; font-weight: 800; background: linear-gradient(135deg, #60a5fa, #a78bfa); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+  .header .subtitle { color: #94a3b8; font-size: 14px; margin-top: 4px; }
+  .filters { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; background: #111827; border: 1px solid #1e293b; border-radius: 12px; padding: 12px 18px; margin-bottom: 20px; }
+  .filters label { font-size: 12px; font-weight: 600; color: #94a3b8; text-transform: uppercase; letter-spacing: .05em; }
+  .filters select, .filters input[type="date"] {
+    background: #1a1f35; color: #e0e6f0; border: 1px solid #2a2a3a; border-radius: 8px;
+    padding: 7px 12px; font-size: 13px; font-family: 'Inter', sans-serif; cursor: pointer;
+    outline: none; color-scheme: dark; max-width: 320px;
+  }
+  .filters select:hover, .filters input[type="date"]:hover,
+  .filters select:focus, .filters input[type="date"]:focus { border-color: #60a5fa; }
+  .filters .btn {
+    background: linear-gradient(135deg, #2563eb, #7c3aed); color: #fff; border: none; border-radius: 8px;
+    padding: 7px 20px; font-size: 13px; font-weight: 600; font-family: 'Inter', sans-serif; cursor: pointer; transition: opacity .2s;
+  }
+  .filters .btn:hover { opacity: .85; }
+  .filters .btn.ghost { background: transparent; border: 1px solid #2a2a3a; color: #94a3b8; padding: 7px 14px; }
+  .filters .btn.ghost:hover { border-color: #60a5fa; color: #e0e6f0; opacity: 1; }
+  .filters .spacer { flex: 1; }
+  .kpi-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); gap: 16px; margin-bottom: 18px; }
+  .kpi-card { background: linear-gradient(145deg, #111827, #1a1f35); border: 1px solid #1e293b; border-radius: 16px; padding: 18px; position: relative; overflow: hidden; }
+  .kpi-card::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px; background: var(--accent, #60a5fa); }
+  .kpi-card .label { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: .06em; color: #64748b; margin-bottom: 6px; }
+  .kpi-card .value { font-size: 30px; font-weight: 800; color: var(--accent, #60a5fa); line-height: 1.15; }
+  .kpi-card .sub { font-size: 12px; color: #94a3b8; margin-top: 4px; }
+  .chips { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 18px; }
+  .chip { background: #111827; border: 1px solid #1e293b; border-radius: 999px; padding: 5px 12px; font-size: 12px; color: #cbd5e1; }
+  .chip b { color: #93c5fd; }
+  .panel { background: #111827; border: 1px solid #1e293b; border-radius: 14px; overflow: hidden; }
+  .panel-head { padding: 14px 18px; border-bottom: 1px solid #1e293b; display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap; }
+  .panel-head h2 { font-size: 14px; font-weight: 700; color: #94a3b8; text-transform: uppercase; letter-spacing: .04em; }
+  .tw { overflow-x: auto; }
+  table { width: 100%; border-collapse: collapse; min-width: 1040px; }
+  thead th { text-align: left; font-size: 11px; font-weight: 600; color: #475569; text-transform: uppercase; letter-spacing: .05em; padding: 10px 12px; border-bottom: 1px solid #1e293b; background: #0f1524; position: sticky; top: 0; z-index: 2; }
+  tbody td { font-size: 13px; padding: 10px 12px; border-bottom: 1px solid #1a1f35; color: #cbd5e1; vertical-align: top; }
+  tr.fila { cursor: pointer; transition: background .15s; }
+  tr.fila:hover { background: #151b2e; }
+  tr.fila.abierta { background: #16203a; }
+  tr.fila.abierta td { border-bottom-color: #1e293b; }
+  .hora { font-variant-numeric: tabular-nums; color: #93c5fd; font-weight: 600; }
+  .tram { font-variant-numeric: tabular-nums; font-weight: 600; color: #e0e6f0; }
+  .cuenta { font-variant-numeric: tabular-nums; }
+  .tipo { color: #cbd5e1; }
+  .motivo { display: block; font-size: 11px; color: #7c8aa5; margin-top: 2px; }
+  .fotos-badge { display: inline-block; background: #1e293b; border-radius: 999px; padding: 2px 9px; font-size: 11px; font-weight: 600; color: #93c5fd; }
+  .fotos-badge.cero { color: #64748b; }
+  .caret { color: #64748b; font-size: 11px; margin-left: 6px; }
+  .detalle { background: #0f1524; }
+  .detalle-inner { padding: 18px; display: grid; gap: 16px; }
+  .ficha { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 10px 20px; }
+  .campo .k { font-size: 10px; text-transform: uppercase; letter-spacing: .05em; color: #64748b; font-weight: 600; }
+  .campo .v { font-size: 13px; color: #e0e6f0; word-break: break-word; }
+  .obs { white-space: pre-wrap; background: #111827; border: 1px solid #1e293b; border-left: 3px solid #60a5fa; border-radius: 8px; padding: 12px 14px; font-size: 12.5px; color: #cbd5e1; line-height: 1.55; }
+  .obs.ambar { border-left-color: #f59e0b; }
+  .bloque-titulo { font-size: 10px; text-transform: uppercase; letter-spacing: .05em; color: #64748b; font-weight: 600; margin-bottom: 6px; }
+  .badge-post { display: inline-block; background: #35240c; color: #fbbf24; border: 1px solid #78471a; border-radius: 999px; padding: 1px 8px; font-size: 10.5px; font-weight: 700; margin-right: 6px; vertical-align: 1px; }
+  .galeria { display: grid; grid-template-columns: repeat(auto-fill, minmax(190px, 1fr)); gap: 12px; }
+  .foto { background: #111827; border: 1px solid #1e293b; border-radius: 10px; overflow: hidden; text-decoration: none; display: block; transition: border-color .2s, transform .2s; }
+  .foto:hover { border-color: #60a5fa; transform: translateY(-2px); }
+  .foto img { width: 100%; height: 130px; object-fit: cover; display: block; background: #0a0e1a; }
+  .foto .etq { padding: 7px 10px; font-size: 11px; color: #94a3b8; font-weight: 600; }
+  .sinfotos { font-size: 12.5px; color: #64748b; font-style: italic; }
+  .vacio { padding: 40px 20px; text-align: center; color: #64748b; font-size: 14px; }
+  .cargando { padding: 30px; text-align: center; color: #64748b; font-size: 13px; }
+  .spin { display: inline-block; width: 14px; height: 14px; border: 2px solid #1e293b; border-top-color: #60a5fa; border-radius: 50%; animation: g .8s linear infinite; vertical-align: -2px; margin-right: 8px; }
+  @keyframes g { to { transform: rotate(360deg); } }
+  .nota { font-size: 11.5px; color: #64748b; margin-top: 10px; }
+  @media (max-width: 640px) { body { padding: 14px; } .header h1 { font-size: 20px; } .filters select { max-width: 100%; } }
+  @media print {
+    body { background: #fff; color: #000; padding: 0; }
+    .filters, .btn, .nota, .caret { display: none !important; }
+    .kpi-card, .panel, .foto { border-color: #ccc; background: #fff; }
+    .kpi-card .value, .header h1 { color: #000 !important; -webkit-text-fill-color: #000; background: none; }
+    tbody td, .campo .v { color: #000; }
+    tr.detalle { display: table-row !important; }
+  }
+</style>
+</head>
+<body>
+  <div class="header">
+    <div>
+      <h1>Trámites por Cuadrilla</h1>
+      <div class="subtitle">Consorcio Normalización ART · trámites ejecutados por día, con sus fotos</div>
+    </div>
+  </div>
+
+  <div class="filters">
+    <label for="cuadrilla">Cuadrilla</label>
+    <select id="cuadrilla"><option value="">— Todas las cuadrillas —</option></select>
+    <label for="dia">Día</label>
+    <input type="date" id="dia">
+    <button class="btn" id="ver">Ver</button>
+    <button class="btn ghost" id="hoy">Hoy</button>
+    <button class="btn ghost" id="ayer">Ayer</button>
+    <div class="spacer"></div>
+    <button class="btn ghost" id="imprimir">🖨️ Imprimir</button>
+  </div>
+
+  <div class="kpi-grid" id="kpis"></div>
+  <div class="chips" id="chips"></div>
+
+  <div class="panel">
+    <div class="panel-head">
+      <h2 id="titulo-tabla">Trámites ejecutados</h2>
+      <span class="nota" id="pista">Click en una fila para ver la ficha y las fotos</span>
+    </div>
+    <div class="tw">
+      <table>
+        <thead>
+          <tr>
+            <th style="width:64px">Hora</th>
+            <th style="width:104px">Trámite</th>
+            <th style="width:110px">Cuenta</th>
+            <th>Cliente</th>
+            <th>Tipo / motivo</th>
+            <th style="width:150px">Medidor (ret → nuevo)</th>
+            <th style="width:130px">Parroquia</th>
+            <th style="width:86px">Fotos</th>
+          </tr>
+        </thead>
+        <tbody id="cuerpo">
+          <tr><td colspan="8" class="cargando"><span class="spin"></span>Cargando…</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+  <div class="nota">Las fotos se cargan al desplegar cada trámite (un día completo puede ser cientos de imágenes). Click en una foto abre el original.</div>
+
+<script>
+const $ = (id) => document.getElementById(id);
+const esc = (v) => String(v == null ? '' : v)
+  .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+  .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+const dash = (v) => (v === null || v === undefined || v === '' || v === '0') ? '—' : esc(v);
+
+function fechaLocal(d) {
+  // fecha en hora LOCAL (nunca UTC: después de las 19:00 UTC ya es "mañana")
+  const x = new Date(d.getTime() - d.getTimezoneOffset() * 60000);
+  return x.toISOString().slice(0, 10);
+}
+
+async function cargar() {
+  const dia = $('dia').value || fechaLocal(new Date());
+  const cuad = $('cuadrilla').value;
+  const cuerpo = $('cuerpo');
+  cuerpo.innerHTML = '<tr><td colspan="8" class="cargando"><span class="spin"></span>Cargando…</td></tr>';
+  try {
+    const r = await fetch('/api/cuadrilla-dia?dia=' + encodeURIComponent(dia) + '&cuadrilla=' + encodeURIComponent(cuad));
+    const d = await r.json();
+    if (d.error) { cuerpo.innerHTML = '<tr><td colspan="8" class="vacio">Error: ' + esc(d.error) + '</td></tr>'; return; }
+    pintar(d);
+  } catch (e) {
+    cuerpo.innerHTML = '<tr><td colspan="8" class="vacio">No se pudo consultar el servidor: ' + esc(e.message) + '</td></tr>';
+  }
+}
+
+function pintar(d) {
+  const res = d.resumen || {};
+  $('kpis').innerHTML = [
+    ['Trámites ejecutados', res.tramites || 0, 'el ' + (res.dia || ''), '#60a5fa'],
+    ['Con fotos', res.con_fotos || 0, 'trámites con al menos 1 foto', '#34d399'],
+    ['Imágenes', res.imagenes || 0, 'en total del día', '#a78bfa'],
+    ['Postergados', res.postergados || 0, 'con motivo de no ejecución', '#f59e0b'],
+    ['Cuadrillas', (d.cuadrillas_dia || []).length, 'con actividad ese día', '#22d3ee']
+  ].map(k => `<div class="kpi-card" style="--accent:${k[3]}">
+      <div class="label">${k[0]}</div><div class="value">${k[1]}</div><div class="sub">${esc(k[2])}</div></div>`).join('');
+
+  $('chips').innerHTML = (res.por_tipo || []).slice(0, 8).map(t =>
+    `<span class="chip">${esc(t.tipo)} <b>${t.n}</b></span>`).join('');
+
+  $('titulo-tabla').textContent = (res.cuadrilla && res.cuadrilla !== 'TODAS')
+    ? 'Trámites de ' + res.cuadrilla + ' — ' + res.dia
+    : 'Trámites ejecutados — ' + res.dia;
+
+  llenarSelector(d);
+
+  const tr = d.tramites || [];
+  if (!tr.length) { $('cuerpo').innerHTML = '<tr><td colspan="8" class="vacio">Sin trámites ejecutados con esos filtros.</td></tr>'; return; }
+
+  $('cuerpo').innerHTML = tr.map((t, i) => fila(t, i)).join('');
+  window.DATOS = tr;
+  // La ficha de cada trámite se construye AL DESPLEGARLA: si se generaran las
+  // 256 fichas de una vez, el DOM cargaría ~1.500 etiquetas <img> (un día
+  // completo son ~1.500 fotos). Así solo se monta lo que él abre.
+  document.querySelectorAll('tr.fila').forEach(f => {
+    f.addEventListener('click', () => {
+      const i = f.dataset.i;
+      const det = document.getElementById('det-' + i);
+      if (!det.querySelector('.detalle-inner')) {
+        det.firstElementChild.innerHTML = '<div class="detalle-inner">' + detalle(window.DATOS[i]) + '</div>';
+      }
+      const abierta = !det.hidden;
+      det.hidden = abierta;
+      f.classList.toggle('abierta', !abierta);
+      f.querySelector('.caret').textContent = abierta ? '▸' : '▾';
+    });
+  });
+}
+
+function llenarSelector(d) {
+  const sel = $('cuadrilla');
+  if (sel.dataset.lleno === '1' && sel.value) return;      // no pisar la elección del usuario
+  const dia = d.cuadrillas_dia || [];
+  const nombres = new Set(dia.map(c => c.cuadrilla));
+  let html = '<option value="">— Todas las cuadrillas —</option>';
+  html += dia.map(c => `<option value="${esc(c.cuadrilla)}">${esc(c.cuadrilla)} (${c.tramites})</option>`).join('');
+  const otras = (d.cuadrillas || []).filter(n => !nombres.has(n));
+  if (otras.length) {
+    html += '<option disabled>──────────</option>';
+    html += otras.map(n => `<option value="${esc(n)}">${esc(n)}</option>`).join('');
+  }
+  const valor = sel.value;
+  sel.innerHTML = html;
+  sel.value = valor;
+  sel.dataset.lleno = '1';
+}
+
+function fila(t, i) {
+  const mRet = t.med_ret_ser || t.med_ret_num;
+  const mNue = t.med_nue_ser || t.med_nue_num;
+  const medidor = (mRet && mNue) ? (mRet + ' → ' + mNue) : (mNue || mRet || '');
+  const badge = t.n_fotos
+    ? `<span class="fotos-badge">📷 ${t.n_fotos}</span>`
+    : '<span class="fotos-badge cero">sin fotos</span>';
+  return `<tr class="fila" data-i="${i}">
+      <td class="hora">${esc(t.hora || '—')}</td>
+      <td class="tram">${esc(t.numero_tramite)}</td>
+      <td class="cuenta">${esc(t.cuenta_contrato || '—')}</td>
+      <td>${esc(t.cliente || '—')}</td>
+      <td class="tipo">${t.postergado ? '<span class="badge-post">⏸ postergado</span>' : ''}${esc(t.tipo_solicitud || '—')}${t.motivo_solicitud ? `<span class="motivo">${esc(t.motivo_solicitud)}</span>` : ''}</td>
+      <td>${esc(medidor || '—')}</td>
+      <td>${esc(t.parroquia || '—')}</td>
+      <td>${badge}<span class="caret">▸</span></td>
+    </tr>
+    <tr class="detalle" id="det-${i}" hidden><td colspan="8"></td></tr>`;
+}
+
+function detalle(t) {
+  const campos = [
+    ['Cuadrilla', t.cuadrilla], ['Estado', t.estado],
+    ['Se posterga', t.postergado ? 'Sí' : 'No'], ['Ejecutado', t.fecha_ejecucion],
+    ['Nº solicitud', t.numero_solicitud], ['Código cliente', t.codigo_cliente],
+    ['Cuenta contrato', t.cuenta_contrato], ['Parroquia', t.parroquia],
+    ['Motivo solicitud', t.motivo_solicitud], ['ID gestión', t.id_gestion],
+    ['Medidor retirado (nº)', t.med_ret_num], ['Medidor retirado (serie)', t.med_ret_ser],
+    ['Medidor nuevo (nº)', t.med_nue_num], ['Medidor nuevo (serie)', t.med_nue_ser],
+    ['Marca medidor nuevo', t.med_nue_marca], ['Dirección', t.direccion]
+  ];
+  const ficha = campos.map(c =>
+    `<div class="campo"><div class="k">${c[0]}</div><div class="v">${dash(c[1])}</div></div>`).join('');
+
+  // Narrativa según se_posterga (criterio de Miguel, 2026-09-23):
+  //   postergado → Motivo + Detalle de NO ejecución (bloque ámbar) y, ADEMÁS,
+  //                la observación de gestión si tiene contenido (bloque azul)
+  //   no postergado (o vacío) → Observación de gestión (bloque azul)
+  let narrativa = '';
+  if (t.postergado) {
+    narrativa =
+      `<div><div class="bloque-titulo">Motivo de no ejecución</div>
+         <div class="obs ambar">${esc(t.motivo_no_ejecucion || 'Sin motivo registrado')}</div></div>
+       <div><div class="bloque-titulo">Detalle de no ejecución</div>
+         <div class="obs ambar">${esc(t.detalle_no_ejecucion || 'Sin detalle registrado')}</div></div>`;
+    if (t.observacion_gestion && t.observacion_gestion.trim()) {
+      narrativa +=
+        `<div><div class="bloque-titulo">Observación de gestión</div>
+           <div class="obs">${esc(t.observacion_gestion)}</div></div>`;
+    }
+  } else if (t.observacion_gestion) {
+    narrativa =
+      `<div><div class="bloque-titulo">Observación de gestión</div>
+         <div class="obs">${esc(t.observacion_gestion)}</div></div>`;
+  }
+
+  const gal = (t.fotos && t.fotos.length)
+    ? `<div class="galeria">${t.fotos.map(f =>
+        `<a class="foto" href="${esc(f.url)}" target="_blank" rel="noopener">
+           <img src="${esc(f.url)}" alt="${esc(f.etiqueta)}" loading="lazy">
+           <div class="etq">${esc(f.etiqueta)}</div></a>`).join('')}</div>`
+    : '<div class="sinfotos">Este trámite no tiene fotos registradas.</div>';
+
+  return `<div class="ficha">${ficha}</div>${narrativa}
+    <div><div class="bloque-titulo">Fotos (${t.n_fotos})</div>${gal}</div>`;
+}
+
+$('ver').addEventListener('click', cargar);
+$('imprimir').addEventListener('click', () => window.print());
+$('hoy').addEventListener('click', () => { $('dia').value = fechaLocal(new Date()); cargar(); });
+$('ayer').addEventListener('click', () => { const d = new Date(); d.setDate(d.getDate() - 1); $('dia').value = fechaLocal(d); cargar(); });
+$('dia').addEventListener('change', cargar);
+$('cuadrilla').addEventListener('change', cargar);
+
+$('dia').value = fechaLocal(new Date());
+cargar();
+</script>
+</body>
+</html>

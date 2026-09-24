@@ -930,6 +930,139 @@ def get_bodega_catalogos():
     }
 
 
+# ── Trámites ejecutados por cuadrilla y día (con fotos) ──────────────────────
+# gestion_fotos = 1 fila por trámite con hasta 10 columnas de foto (verificado
+# 2026-09-23: 83.728 filas / 83.728 trámites distintos → el LEFT JOIN no
+# duplica).  recorrido_cuadrillas NO es 1:1 (92.234 / 92.214), así que el
+# motivo_solicitud se trae con subconsulta para no duplicar filas.
+FOTO_COLS = [
+    ("foto_predio", "Predio"),
+    ("foto_medidor", "Medidor"),
+    ("foto_red_servicio", "Red de servicio"),
+    ("foto_ubic_med", "Ubicación del medidor"),
+    ("foto_puesta_tierra", "Puesta a tierra"),
+    ("foto_sello_medidor", "Sello del medidor"),
+    ("foto_antes_aper_med", "Antes / apertura medidor"),
+    ("foto_entrega_notif", "Entrega de notificación"),
+    ("foto_lectura_med_nuevo", "Lectura medidor nuevo"),
+    ("foto_lectura_med_retirado", "Lectura medidor retirado"),
+]
+
+
+def _es_postergado(v):
+    """¿El trámite se postergó? `se_posterga` viene con formatos mezclados según el
+    origen (verificado 2026-09-23): 1/0 (int), 't'/'f' (bool de pandas al escribir),
+    'Si'/'No', '' y None.  Se normaliza acá, en el servidor, para que la página no
+    tenga que adivinar (una sola fuente de verdad).
+    """
+    if v is None:
+        return False
+    return str(v).strip().lower() in ("1", "t", "true", "si", "sí", "s", "yes", "y")
+
+
+def get_cuadrilla_dia_data(dia=None, cuadrilla=None):
+    """API: trámites EJECUTADOS por una cuadrilla en un día, con sus fotos.
+
+    ⚠️ La fecha por defecto se calcula con la hora LOCAL del servidor
+    (datetime.now()), NUNCA con date('now') de SQLite: SQLite usa UTC y en
+    Ecuador (UTC-5) después de las 19:00 ya es "mañana" → date('now') devolvía
+    el día siguiente y la página salía vacía (comprobado 2026-09-23).
+    """
+    if not dia:
+        dia = datetime.now().strftime("%Y-%m-%d")
+    if cuadrilla in ("", "todas", "TODAS", "Todas", None):
+        cuadrilla = None
+
+    filtro = " AND gt.cuadrilla = ?" if cuadrilla else ""
+    params = [dia] + ([cuadrilla] if cuadrilla else [])
+    cols_foto = ", ".join(f"gf.{c}" for c, _ in FOTO_COLS)
+
+    filas = query_db(f"""
+        SELECT gt.numero_tramite, gt.numero_solicitud, gt.fecha_ejecucion,
+               gt.estado, gt.tipo_solicitud, gt.cuadrilla,
+               gt.cuenta_contrato, gt.codigo_cliente, gt.cliente,
+               gt.direccion, gt.parroquia, gt.observacion_gestion,
+               gt.se_posterga, gt.motivo_no_ejecucion, gt.detalle_no_ejecucion,
+               gt.med_ret_num, gt.med_ret_ser, gt.med_nue_num, gt.med_nue_ser,
+               gt.med_nue_marca, gt.id_gestion,
+               (SELECT rc.motivo_solicitud FROM recorrido_cuadrillas rc
+                 WHERE rc.numero_tramite = gt.numero_tramite LIMIT 1) AS motivo_solicitud,
+               {cols_foto}
+        FROM gestion_tramites gt
+        LEFT JOIN gestion_fotos gf ON gf.numero_tramite = gt.numero_tramite
+        WHERE date(gt.fecha_ejecucion) = ?{filtro}
+        ORDER BY gt.fecha_ejecucion, gt.cuadrilla
+        LIMIT 500
+    """, params)
+
+    if isinstance(filas, dict):          # query_db devuelve {"error": ...}
+        return filas
+
+    tramites, imagenes, por_tipo = [], 0, {}
+    for r in filas:
+        fotos = [{"etiqueta": et, "url": r[c]} for c, et in FOTO_COLS if r.get(c)]
+        imagenes += len(fotos)
+        tipo = r.get("tipo_solicitud") or "Sin tipo"
+        por_tipo[tipo] = por_tipo.get(tipo, 0) + 1
+        tramites.append({
+            "numero_tramite": r.get("numero_tramite"),
+            "numero_solicitud": r.get("numero_solicitud"),
+            "hora": (r.get("fecha_ejecucion") or "")[11:16],
+            "fecha_ejecucion": r.get("fecha_ejecucion"),
+            "estado": r.get("estado"),
+            "tipo_solicitud": tipo,
+            "motivo_solicitud": r.get("motivo_solicitud"),
+            "cuadrilla": r.get("cuadrilla"),
+            "cuenta_contrato": r.get("cuenta_contrato"),
+            "codigo_cliente": r.get("codigo_cliente"),
+            "cliente": r.get("cliente"),
+            "direccion": r.get("direccion"),
+            "parroquia": r.get("parroquia"),
+            "observacion_gestion": r.get("observacion_gestion"),
+            "se_posterga": r.get("se_posterga"),
+            "postergado": _es_postergado(r.get("se_posterga")),
+            "motivo_no_ejecucion": r.get("motivo_no_ejecucion"),
+            "detalle_no_ejecucion": r.get("detalle_no_ejecucion"),
+            "med_ret_num": r.get("med_ret_num"),
+            "med_ret_ser": r.get("med_ret_ser"),
+            "med_nue_num": r.get("med_nue_num"),
+            "med_nue_ser": r.get("med_nue_ser"),
+            "med_nue_marca": r.get("med_nue_marca"),
+            "id_gestion": r.get("id_gestion"),
+            "n_fotos": len(fotos),
+            "fotos": fotos,
+        })
+
+    cuad_dia = query_db("""
+        SELECT cuadrilla, COUNT(*) AS tramites
+        FROM gestion_tramites
+        WHERE date(fecha_ejecucion) = ? AND cuadrilla IS NOT NULL AND cuadrilla != ''
+        GROUP BY cuadrilla ORDER BY 2 DESC
+    """, [dia])
+    cuad_todas = query_db("""
+        SELECT DISTINCT cuadrilla FROM gestion_tramites
+        WHERE cuadrilla IS NOT NULL AND cuadrilla != ''
+          AND date(fecha_ejecucion) >= date(?, '-180 day')
+        ORDER BY cuadrilla
+    """, [dia])
+
+    return {
+        "resumen": {
+            "dia": dia,
+            "cuadrilla": cuadrilla or "TODAS",
+            "tramites": len(tramites),
+            "con_fotos": sum(1 for t in tramites if t["n_fotos"]),
+            "imagenes": imagenes,
+            "postergados": sum(1 for t in tramites if t["postergado"]),
+            "por_tipo": sorted(({"tipo": k, "n": v} for k, v in por_tipo.items()),
+                               key=lambda x: -x["n"]),
+        },
+        "tramites": tramites,
+        "cuadrillas_dia": cuad_dia if isinstance(cuad_dia, list) else [],
+        "cuadrillas": [r["cuadrilla"] for r in cuad_todas] if isinstance(cuad_todas, list) else [],
+    }
+
+
 class APIHandler(SimpleHTTPRequestHandler):
     """Manejador que sirve estáticos + API JSON"""
 
@@ -981,6 +1114,12 @@ class APIHandler(SimpleHTTPRequestHandler):
             self.send_json(get_bodega_resumen(d, h))
         elif path == "/api/bodega/catalogos":
             self.send_json(get_bodega_catalogos())
+        elif path == "/api/cuadrilla-dia":
+            qs = urllib.parse.parse_qs(parsed.query)
+            self.send_json(get_cuadrilla_dia_data(
+                qs.get("dia", [None])[0],
+                qs.get("cuadrilla", [None])[0],
+            ))
         elif path == "/api/system":
             self.send_json(self.get_system_info())
         else:
