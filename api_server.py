@@ -1073,6 +1073,7 @@ class APIHandler(SimpleHTTPRequestHandler):
         self.send_header("Expires", "0")
         super().end_headers()
 
+
     def do_GET(self):
         parsed = urllib.parse.urlparse(self.path)
         path = parsed.path
@@ -1122,16 +1123,46 @@ class APIHandler(SimpleHTTPRequestHandler):
             ))
         elif path == "/api/system":
             self.send_json(self.get_system_info())
+        elif path == "/api/energia":
+            qs = urllib.parse.parse_qs(parsed.query)
+            try:
+                temp = float(qs.get("temp", ["28"])[0] or 28)
+            except ValueError:
+                temp = 28.0
+            self.send_json(self.get_energia(temp))
         else:
             # Servir archivos estáticos desde STATIC_DIR
             super().do_GET()
     
-    def send_json(self, data):
-        self.send_response(200)
+    def send_json(self, data, codigo=200):
+        self.send_response(codigo)
         self.send_header("Content-Type", "application/json")
         self.send_header("Access-Control-Allow-Origin", "*")
         self.end_headers()
         self.wfile.write(json.dumps(data, ensure_ascii=False).encode("utf-8"))
+
+    def get_energia(self, temp_costa=28.0):
+        """Dashboard del sistema eléctrico ecuatoriano (CELEC SUR + CENACE).
+
+        Usa el módulo externo energia_ec/modelo.py para no cargar este archivo
+        con la lógica de cálculo. Si el módulo falla, devuelve un error claro
+        en lugar de tumbar el servidor de dashboards de medidores.
+        """
+        try:
+            import sys as _sys
+            ruta = "/data/data/com.termux/files/home/energia_ec"
+            if ruta not in _sys.path:
+                _sys.path.insert(0, ruta)
+            # importar siempre fresco: el módulo cambia con cada recolección
+            for _m in ("modelo",):
+                if _m in _sys.modules:
+                    del _sys.modules[_m]
+            import modelo as _modelo
+            return _modelo.payload(temp_costa)
+        except Exception as _e:
+            import traceback as _tb
+            return {"error": str(_e), "traza": _tb.format_exc()[-600:],
+                    "mazar": {"cota": None}, "balance": {"disponible": False}}
 
     def get_system_info(self):
         import subprocess, os, re
