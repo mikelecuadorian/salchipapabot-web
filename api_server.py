@@ -11,6 +11,7 @@ import time
 import urllib.parse
 from http.server import HTTPServer, SimpleHTTPRequestHandler
 from datetime import datetime, timedelta
+import api_consulta
 
 DB_PATH = "/data/data/com.termux/files/home/salchipapabot/gestion_medidores.db"
 STATIC_DIR = os.path.dirname(os.path.abspath(__file__))
@@ -1074,6 +1075,52 @@ class APIHandler(SimpleHTTPRequestHandler):
         super().end_headers()
 
 
+    def _ruta_consulta(self, path, query):
+        # Endpoints de consulta remota (solo lectura, con token)
+        ok, err = api_consulta.token_ok(self.headers, query)
+        if not ok:
+            self.send_json({"ok": False, "error": err}, 401)
+            return
+        accion = path.rsplit("/", 1)[-1]
+        if accion == "health":
+            self.send_json(api_consulta.health())
+        elif accion == "schema":
+            self.send_json(api_consulta.schema())
+        else:
+            self.send_json({"ok": False, "error": "accion desconocida; use health|schema"}, 404)
+
+    def do_POST(self):
+        parsed = urllib.parse.urlparse(self.path)
+        path = parsed.path
+        if path == "/api/consulta/sql":
+            ok, err = api_consulta.token_ok(self.headers, parsed.query)
+            if not ok:
+                self.send_json({"ok": False, "error": err}, 401)
+                return
+            try:
+                n = int(self.headers.get("Content-Length") or 0)
+                cuerpo = self.rfile.read(n).decode("utf-8") if n else "{}"
+                datos = json.loads(cuerpo)
+            except Exception as e:
+                self.send_json({"ok": False, "error": "JSON invalido: " + str(e)}, 400)
+                return
+            self.send_json(api_consulta.ejecutar_consulta(datos.get("sql", "")))
+        elif path == "/api/buzon":
+            ok, err = api_consulta.token_ok(self.headers, parsed.query)
+            if not ok:
+                self.send_json({"ok": False, "error": err}, 401)
+                return
+            try:
+                n = int(self.headers.get("Content-Length") or 0)
+                datos = json.loads(self.rfile.read(n).decode("utf-8")) if n else {}
+            except Exception as e:
+                self.send_json({"ok": False, "error": "JSON invalido: " + str(e)}, 400)
+                return
+            self.send_json(api_consulta.buzon_escribir(
+                datos.get("de"), datos.get("asunto"), datos.get("cuerpo")))
+        else:
+            self.send_json({"ok": False, "error": "ruta POST desconocida"}, 404)
+
     def do_GET(self):
         parsed = urllib.parse.urlparse(self.path)
         path = parsed.path
@@ -1130,6 +1177,15 @@ class APIHandler(SimpleHTTPRequestHandler):
             except ValueError:
                 temp = 28.0
             self.send_json(self.get_energia(temp))
+        elif path.startswith("/api/consulta/"):
+            self._ruta_consulta(path, parsed.query)
+        elif path == "/api/buzon":
+            ok, err = api_consulta.token_ok(self.headers, parsed.query)
+            if not ok:
+                self.send_json({"ok": False, "error": err}, 401); return
+            qs = urllib.parse.parse_qs(parsed.query)
+            desde = int(qs.get("desde", ["0"])[0] or 0)
+            self.send_json(api_consulta.buzon_leer(desde))
         else:
             # Servir archivos estáticos desde STATIC_DIR
             super().do_GET()

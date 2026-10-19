@@ -38,3 +38,6 @@ __pycache__/
 # Reportes generados
 ordenes_previas_julio.csv
 tramites_recl.xlsx
+
+# Adjuntos del buzón tablet ↔ Windows (datos, no código)
+buzon_archivos/
