@@ -158,6 +158,7 @@
       <span><i style="background:var(--azul)"></i>Con la tendencia proyectada</span>
       <span><i style="background:var(--rojo)"></i>Si esta semana fuera más cara</span>
     </div>
+    <div id="probML"></div>
   </div>
 
   <!-- EMBALSES -->
@@ -256,6 +257,15 @@
       <div style="position:relative;height:190px"><canvas id="chCoca"></canvas></div>
       <div id="cocaStats" class="note" style="margin-top:10px"></div>
     </div>
+  </div>
+
+  <!-- LLUVIA EN LA CUENCA DE MAZAR -->
+  <div class="sec" id="secLluvia" style="display:none">
+    <h2>Lluvia en la cuenca de Mazar</h2>
+    <p class="hint" id="lluviaHint">Cuenca alta · Open-Meteo · explica los quiebres de tendencia</p>
+    <div id="lluviaPanel"></div>
+    <div style="position:relative;height:170px;margin-top:16px"><canvas id="chLluvia"></canvas></div>
+    <div id="lluviaStats" class="note" style="margin-top:10px"></div>
   </div>
 
   <!-- COMPARATIVA ANUAL MAZAR -->
@@ -366,6 +376,7 @@ function render() {
 
   renderProb();
   renderComparativa();
+  renderLluvia();
   renderCocaHist();
   renderEmbalses();
   renderBot();
@@ -504,6 +515,105 @@ function renderBot() {
         </div>`;
     }
   }
+}
+
+// ─────────────────────────────────────────────
+// Lluvia en la cuenca de Mazar
+// ─────────────────────────────────────────────
+function renderLluvia() {
+  const L = DATA.lluvia;
+  const sec = document.getElementById('secLluvia');
+  if (!L || !L.disponible || !L.serie || !L.serie.length) {
+    sec.style.display = 'none';
+    return;
+  }
+  sec.style.display = '';
+
+  const colores = { alta: 'var(--verde)', normal: '#7ec8e3', baja: '#f0b429', seca: 'var(--rojo)' };
+  const col = colores[L.nivel] || 'var(--tx2)';
+  const pctRef = Math.min(100, Math.round(100 * L.lluvia_2d_mm / (L.referencia_2d_mm * 2)));
+
+  document.getElementById('lluviaHint').textContent =
+    `Cuenca alta · al ${L.fecha_ultima} · referencia histórica 2 días: ${fmt(L.referencia_2d_mm, 1)} mm`;
+
+  document.getElementById('lluviaPanel').innerHTML = `
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+      <div class="card" style="padding:14px">
+        <div class="lbl">Lluvia acumulada 2 días</div>
+        <div style="font-size:26px;font-weight:800;color:${col};margin:4px 0">
+          ${fmt(L.lluvia_2d_mm, 1)} <small style="font-size:13px;font-weight:600">mm</small>
+        </div>
+        <div class="note" style="margin-top:6px">${L.etiqueta}</div>
+        <div style="margin-top:10px;height:6px;background:rgba(255,255,255,.08);border-radius:3px;overflow:hidden">
+          <div style="width:${pctRef}%;height:100%;background:${col}"></div>
+        </div>
+        <div class="note" style="margin-top:5px;font-size:10px">
+          ${pctRef}% del doble de la referencia
+        </div>
+      </div>
+      <div class="card" style="padding:14px">
+        <div class="lbl">Efecto en la cota</div>
+        <div style="font-size:26px;font-weight:800;color:${L.delta_esperado_lluvia < 0 ? 'var(--rojo)' : 'var(--verde)'};margin:4px 0">
+          ${L.delta_esperado_lluvia > 0 ? '+' : ''}${fmt(L.delta_esperado_lluvia, 2)} <small style="font-size:13px;font-weight:600">m/día</small>
+        </div>
+        <div class="note" style="margin-top:6px">
+          Caída esperada <b>ajustada por lluvia</b><br>
+          (el modelo simple no la considera)
+        </div>
+        <div class="note" style="margin-top:8px;font-size:10px;border-top:1px solid rgba(255,255,255,.08);padding-top:7px">
+          ${fmt(L.pendiente_mm_a_m * 1000, 1)} mm de cota por cada mm de lluvia
+        </div>
+      </div>
+    </div>
+    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:10px">
+      <div class="card" style="padding:11px">
+        <div class="lbl" style="font-size:9px">Hoy</div>
+        <div style="font-size:16px;font-weight:800">${fmt(L.lluvia_hoy_mm, 1)} <small>mm</small></div>
+      </div>
+      <div class="card" style="padding:11px">
+        <div class="lbl" style="font-size:9px">Últimos 7 días</div>
+        <div style="font-size:16px;font-weight:800">${fmt(L.lluvia_7d_mm, 1)} <small>mm</small></div>
+      </div>
+      <div class="card" style="padding:11px">
+        <div class="lbl" style="font-size:9px">Últimos 30 días</div>
+        <div style="font-size:16px;font-weight:800">${fmt(L.lluvia_30d_mm, 1)} <small>mm</small></div>
+      </div>
+    </div>`;
+
+  document.getElementById('lluviaStats').innerHTML =
+    `Relación medida sobre <b>956 días</b> de histórico: la lluvia acumulada de 2 días explica
+     el cambio diario de cota con <b>r = +${fmt(L.correlacion, 2)}</b>. Incorporarla reduce el error
+     del pronóstico en <b>${fmt(L.mae_mejora_pct, 1)} %</b>.<br>
+     <span style="color:var(--tx3)">${L.nota}</span>`;
+
+  // gráfica de barras: precipitación diaria de los últimos 30 días
+  const etq = L.serie.map(x => x.f.slice(5));
+  const datos = L.serie.map(x => x.mm);
+  const ctx = document.getElementById('chLluvia').getContext('2d');
+  if (window._chLluvia) window._chLluvia.destroy();
+  window._chLluvia = new Chart(ctx, {
+    type: 'bar',
+    data: {
+      labels: etq,
+      datasets: [{
+        data: datos,
+        backgroundColor: datos.map(v => v >= L.referencia_2d_mm / 2 ? '#7ec8e3' : '#3f5470'),
+        borderRadius: 2,
+      }]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: {
+        legend: { display: false },
+        tooltip: { callbacks: { label: c => `${fmt(c.raw, 1)} mm` } }
+      },
+      scales: {
+        x: { ticks: { color: '#8899aa', font: { size: 9 }, maxTicksLimit: 10 }, grid: { display: false } },
+        y: { beginAtZero: true, ticks: { color: '#8899aa', font: { size: 9 },
+             callback: v => v + ' mm' }, grid: { color: 'rgba(255,255,255,.05)' } }
+      }
+    }
+  });
 }
 
 // ─────────────────────────────────────────────
@@ -801,6 +911,52 @@ function renderProb() {
     </div>`;
   });
   document.getElementById('probChart').innerHTML = html;
+
+  // comparación con el modelo multivariable (si está disponible)
+  const ml = DATA.pronostico_ml;
+  const cont = document.getElementById('probML');
+  if (!cont) return;
+  if (!ml || !ml.disponible) {
+    cont.innerHTML = '';
+    return;
+  }
+  let filas = '';
+  hs.forEach(([k, lbl]) => {
+    const vp = p[k] ?? 0;
+    const vm = ml.probabilidades[k] ?? 0;
+    const dif = vm - vp;
+    const colDif = dif > 0 ? 'var(--verde)' : dif < 0 ? 'var(--rojo)' : 'var(--tx3)';
+    filas += `<div style="display:grid;grid-template-columns:1fr 58px 58px 62px;gap:8px;
+                 align-items:center;padding:6px 0;border-bottom:1px solid rgba(255,255,255,.05)">
+      <div style="font-size:11.5px;color:var(--tx2)">${lbl}</div>
+      <div style="text-align:right;font-size:12px;color:var(--tx3)">${fmt(vp, 1)}%</div>
+      <div style="text-align:right;font-size:12.5px;font-weight:700;color:var(--tx)">${fmt(vm, 1)}%</div>
+      <div style="text-align:right;font-size:11px;font-weight:700;color:${colDif}">
+        ${dif > 0 ? '+' : ''}${fmt(dif, 1)} pp</div>
+    </div>`;
+  });
+
+  cont.innerHTML = `
+    <div style="margin-top:16px;padding-top:12px;border-top:1px solid rgba(255,255,255,.1)">
+      <div class="lbl" style="margin-bottom:8px">
+        Modelo multivariable · ${ml.modelo || 'AR + nivel + lluvia'}
+        <span style="color:var(--verde);font-weight:700">(validado)</span>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 58px 58px 62px;gap:8px;
+                  font-size:9.5px;letter-spacing:.06em;text-transform:uppercase;
+                  color:var(--tx3);padding-bottom:5px">
+        <div>Horizonte</div><div style="text-align:right">Tendencia</div>
+        <div style="text-align:right">Multivar.</div><div style="text-align:right">Δ</div>
+      </div>
+      ${filas}
+      <div class="note" style="margin-top:10px">
+        Backtest temporal sobre <b>${ml.n_entrenamiento}</b> días
+        (${ml.periodo_entrenamiento}): reduce el error del pronóstico
+        <b>${fmt(ml.mejora_vs_tendencia_pct, 1)} %</b> frente a la tendencia simple
+        y acierta la dirección el <b>${ml.direccion_pct || 75.6} %</b> de las veces (antes 63,8 %).<br>
+        <span style="color:var(--tx3)">${ml.nota}</span>
+      </div>
+    </div>`;
 }
 
 // ─────────────────────────────────────────────

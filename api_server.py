@@ -1209,8 +1209,8 @@ class APIHandler(SimpleHTTPRequestHandler):
             ruta = "/data/data/com.termux/files/home/energia_ec"
             if ruta not in _sys.path:
                 _sys.path.insert(0, ruta)
-            # importar siempre fresco: el módulo cambia con cada recolección
-            for _m in ("modelo",):
+            # importar siempre fresco: los módulos cambian con cada recolección
+            for _m in ("modelo", "lluvia_paute", "pronostico_mazar", "gen_mazar"):
                 if _m in _sys.modules:
                     del _sys.modules[_m]
             import modelo as _modelo
