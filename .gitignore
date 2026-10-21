@@ -41,3 +41,6 @@ tramites_recl.xlsx
 
 # Adjuntos del buzón tablet ↔ Windows (datos, no código)
 buzon_archivos/
+# energia.html se movio al repo energia-ec (2026-10-21) - servidor propio en :8090
+
+# El dashboard de energia tiene su propio repo (energia-ec) y su propio servicio (puerto 8090)

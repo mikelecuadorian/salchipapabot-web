@@ -9,6 +9,7 @@ import os
 import sys
 import time
 import urllib.parse
+import urllib.request
 from http.server import HTTPServer, SimpleHTTPRequestHandler
 from datetime import datetime, timedelta
 import api_consulta
@@ -1171,12 +1172,22 @@ class APIHandler(SimpleHTTPRequestHandler):
         elif path == "/api/system":
             self.send_json(self.get_system_info())
         elif path == "/api/energia":
-            qs = urllib.parse.parse_qs(parsed.query)
+            # MOVED (2026-10-21): el dashboard de energía es ahora su propio
+            # servicio (repo `energia-ec`, puerto 8090). Antes de devolver un
+            # error, reenviar la petición al servidor nuevo mantiene
+            # compatibles a los consumidores que apunten a este hostname.
             try:
-                temp = float(qs.get("temp", ["28"])[0] or 28)
-            except ValueError:
-                temp = 28.0
-            self.send_json(self.get_energia(temp))
+                qs = urllib.parse.parse_qs(parsed.query)
+                destino = "http://127.0.0.1:8090/api/energia"
+                if parsed.query:
+                    destino += "?" + parsed.query
+                with urllib.request.urlopen(destino, timeout=30) as r:
+                    self.send_json(json.loads(r.read().decode("utf-8")))
+            except Exception as _e:
+                self.send_json({
+                    "error": "el dashboard de energía se mudó a su propio servicio "
+                             f"(puerto 8090, repo energia-ec): {_e}",
+                    "mazar": {"cota": None}, "balance": {"disponible": False}}, 503)
         elif path.startswith("/api/consulta/"):
             self._ruta_consulta(path, parsed.query)
         elif path == "/api/buzon":
@@ -1198,27 +1209,15 @@ class APIHandler(SimpleHTTPRequestHandler):
         self.wfile.write(json.dumps(data, ensure_ascii=False).encode("utf-8"))
 
     def get_energia(self, temp_costa=28.0):
-        """Dashboard del sistema eléctrico ecuatoriano (CELEC SUR + CENACE).
+        """DEPRECADO (2026-10-21). El dashboard de energía es su propio servicio.
 
-        Usa el módulo externo energia_ec/modelo.py para no cargar este archivo
-        con la lógica de cálculo. Si el módulo falla, devuelve un error claro
-        en lugar de tumbar el servidor de dashboards de medidores.
+        Vive en el repo `energia-ec` (servidor_energia.py, puerto 8090) junto
+        con su página y su modelo. Se conserva esta firma solo para no romper
+        llamadas internas antiguas; /api/energia ya reenvía a 8090.
         """
-        try:
-            import sys as _sys
-            ruta = "/data/data/com.termux/files/home/energia_ec"
-            if ruta not in _sys.path:
-                _sys.path.insert(0, ruta)
-            # importar siempre fresco: los módulos cambian con cada recolección
-            for _m in ("modelo", "lluvia_paute", "pronostico_mazar", "gen_mazar"):
-                if _m in _sys.modules:
-                    del _sys.modules[_m]
-            import modelo as _modelo
-            return _modelo.payload(temp_costa)
-        except Exception as _e:
-            import traceback as _tb
-            return {"error": str(_e), "traza": _tb.format_exc()[-600:],
-                    "mazar": {"cota": None}, "balance": {"disponible": False}}
+        return {"error": "movido al servicio de energía (puerto 8090, repo energia-ec)",
+                "mazar": {"cota": None}, "balance": {"disponible": False}}
+
 
     def get_system_info(self):
         import subprocess, os, re
