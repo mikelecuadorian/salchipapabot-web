@@ -88,4 +88,4 @@ No requiere `.env` propio — lee directamente de `gestion_medidores.db` en la r
 
 ---
 
-*Proyecto personal — LaCostaTech 🇪🇨*
+*Proyecto personal — SalchipapaBot 🇪🇨*
