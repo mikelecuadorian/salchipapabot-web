@@ -1257,7 +1257,7 @@
                     <span class="tl-date">Oct 2026</span>
                     <div class="tl-content">
                         <h4>🗜️ Rotación y Compresión de Logs</h4>
-                        <p>Los 26 logs del ecosistema pasan a una política única de rotación por tamaño con gzip y <code>copytruncate</code>, ejecutada por crond cada hora. El histórico bajó de 47 MB a 18 MB sin perder una línea, y el descubrimiento de que <code>runsvdir</code> corre huérfano en esta tablet dejó documentado el camino.</p>
+                        <p>Los 26 logs del ecosistema pasan a una política única de rotación por tamaño con gzip y <code>copytruncate</code>, ejecutada por crond cada hora. El histórico bajó de 47 MB a 18 MB sin perder una línea, con verificación en vivo de que los procesos siguen escribiendo al mismo descriptor.</p>
                         <span class="tl-tag">logrotate · gzip</span>
                     </div>
                 </div>
