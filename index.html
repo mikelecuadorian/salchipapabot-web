@@ -668,26 +668,27 @@
         </div>
         <h1>Ing. Miguel Angel Campuzano Lupera<br>Server Ecosystem</h1>
         <p>
-            Dos bots inteligentes de Telegram, transcripción de voz con Groq Whisper,
-            inteligencia artificial con DeepSeek, agente autónomo Hermes y modelo local Llama 3.2,
-            toda la infraestructura corriendo 24/7 desde una tablet Android.
+            Bot de Telegram para el Consorcio ART, agente autónomo Hermes, asignación
+            automática de trámites en AFlow, dashboard del sistema eléctrico nacional con
+            modelo de pronóstico, y transcripción de voz — toda la infraestructura
+            corriendo 24/7 desde una tablet Android.
         </p>
         <div class="hero-stats">
             <div class="hero-stat">
-                <span class="num">6</span>
-                <span class="label">Bots Activos</span>
+                <span class="num">672K</span>
+                <span class="label">Registros en BD</span>
             </div>
             <div class="hero-stat">
-                <span class="num">19</span>
-                <span class="label">Servicios runsv</span>
+                <span class="num">9</span>
+                <span class="label">Servicios activos</span>
             </div>
             <div class="hero-stat">
-                <span class="num">1</span>
-                <span class="label">Dashboard en Vivo</span>
+                <span class="num">3</span>
+                <span class="label">Portales en vivo</span>
             </div>
             <div class="hero-stat">
-                <span class="num">5</span>
-                <span class="label">Scrapes al Día</span>
+                <span class="num">16</span>
+                <span class="label">Automatizaciones</span>
             </div>
             <div class="hero-stat">
                 <span class="num">1</span>
@@ -751,7 +752,7 @@
                 <div class="cap-card">
                     <span class="cap-icon">🗄️</span>
                     <h4>Consultas SQL en Lenguaje Natural</h4>
-                    <p>Más de 375,000 registros en 8 tablas. Carga de archivos XLSX a SQLite, consultas por voz o texto, análisis por cuadrilla y reportes diarios.</p>
+                    <p>Más de 670,000 registros en 19 tablas. Carga de XLSX a SQLite, consultas por voz o texto, análisis por cuadrilla y reportes diarios.</p>
                     <span class="cap-tag">SQLite + DeepSeek</span>
                 </div>
                 <div class="cap-card">
@@ -789,6 +790,30 @@
                     <h4>Monitoreo en Vivo del Servidor</h4>
                     <p>Endpoint <code>/api/system</code> que reporta CPU, RAM, disco, uptime del dispositivo y el estado de cada servicio en tiempo real, verificando que el PID esté vivo.</p>
                     <span class="cap-tag">API + Dashboard</span>
+                </div>
+                <div class="cap-card">
+                    <span class="cap-icon">🚨</span>
+                    <h4>Asignación Automática de Trámites</h4>
+                    <p>Motor que resuelve emergencias por coordenada GPS contra polígonos de zona, elige la cuadrilla según rotación semanal y turno, y asigna en lote en el portal AFlow. Incluye anti-reintento y guardarraíl de estado.</p>
+                    <span class="cap-tag">Polígonos + Playwright</span>
+                </div>
+                <div class="cap-card">
+                    <span class="cap-icon">🏔️</span>
+                    <h4>Monitoreo del Sistema Eléctrico Nacional</h4>
+                    <p>Cotas de los embalses de la cascada Paute, caudal de Coca Codo, demanda nacional e importación de Colombia. Pronóstico de cota con modelo multivariable validado por backtest temporal y simulación Monte Carlo.</p>
+                    <span class="cap-tag">Modelo M6 + Monte Carlo</span>
+                </div>
+                <div class="cap-card">
+                    <span class="cap-icon">⚡</span>
+                    <h4>Producción vs. Capacidad Instalada</h4>
+                    <p>Generación diaria por central cruzada con su capacidad instalada (4,075 MW nombrados) para leer el porcentaje de uso real. Detecta y publica las inconsistencias de la fuente oficial en vez de esconderlas.</p>
+                    <span class="cap-tag">CENACE + CELEC</span>
+                </div>
+                <div class="cap-card">
+                    <span class="cap-icon">👁️</span>
+                    <h4>Vigías Silenciosos con Anti-Ruido</h4>
+                    <p>Monitores que corren cada pocos minutos y solo avisan cuando hay daño real, una sola vez por evento. Sin reavisos, sin ruido: vigías de servicios, de órdenes SAP, de cédulas CNEL y del gateway.</p>
+                    <span class="cap-tag">Cron + Estado Persistente</span>
                 </div>
                 <div class="cap-card">
                     <span class="cap-icon">💾</span>
@@ -854,7 +879,7 @@
             </section>
             <section class="fade-in">
                 <span class="section-label">🛠️ Tecnologías</span>
-                <h2>Stack Tecnológico</span>
+                <h2>Stack Tecnológico</h2>
                 <p class="section-subtitle">Lenguajes, frameworks y herramientas que hacen funcionar el ecosistema.</p>
                 <div class="tech-grid">
                     <div class="tech-item">
@@ -1062,12 +1087,16 @@
                     <span class="layer-label">Servicios</span>
                     <div class="items">
                         <span class="item highlight">salchipapabot</span>
-                        <span class="item highlight">hermes-agent</span>
-                        <span class="item highlight">servidor_web</span>
-                        <span class="item">servidor_coordenadas</span>
+                        <span class="item highlight">hermes</span>
+                        <span class="item highlight">servidor_web (:8080)</span>
+                        <span class="item highlight">servidor_energia (:8090)</span>
+                        <span class="item">hermes_medicina</span>
+                        <span class="item">hermes_nutricion</span>
+                        <span class="item">guardian</span>
+                        <span class="item">vigia_gateways</span>
                         <span class="item">cloudflared (túnel + 3 hostnames)</span>
                         <span class="item">crond</span>
-                        <span class="item">sshd</span>
+                        <span class="item">sshd_custom</span>
                     </div>
                 </div>
                 <div class="infra-layer">
@@ -1188,9 +1217,25 @@
                     </div>
                 </div>
                 <div class="timeline-item">
+                    <span class="tl-date">Oct 2026</span>
+                    <div class="tl-content">
+                        <h4>🚨 Asignación Automática en AFlow</h4>
+                        <p>Motor que resuelve emergencias por coordenada GPS contra polígonos de zona y elige la cuadrilla según rotación semanal y turno. Las desconexiones van por parroquia a cuadrilla fija. Un solo asignador por zona para no duplicar.</p>
+                        <span class="tl-tag">Operación automatizada</span>
+                    </div>
+                </div>
+                <div class="timeline-item">
+                    <span class="tl-date">Oct 2026</span>
+                    <div class="tl-content">
+                        <h4>🏔️ Dashboard del Sistema Eléctrico</h4>
+                        <p>Cotas de los embalses de la cascada Paute, caudal de Coca Codo, demanda nacional e importación de Colombia. Pronóstico de cota con modelo multivariable validado por backtest temporal, simulación Monte Carlo con bootstrap de coeficientes y capacidad instalada por central.</p>
+                        <span class="tl-tag">Modelo M6 · pronóstico</span>
+                    </div>
+                </div>
+                <div class="timeline-item">
                     <span class="tl-date">Hoy</span>
                     <div class="tl-content">
-                        <h4>🔥 2 Bots · 7 Servicios · 375K Registros</h4>
+                        <h4>🔥 3 Bots · 9 Servicios · 672K Registros</h4>
                         <p>Todo corriendo 24/7 desde una tablet OUKITEL RT2 en Guayaquil, Ecuador. Sin servidores externos, sin costos mensuales.</p>
                         <span class="tl-tag">Hecho en Ecuador 🇪🇨</span>
                     </div>
@@ -1202,28 +1247,28 @@
             <p class="section-subtitle">Lo que el servidor procesa y mantiene día a día.</p>
             <div class="stats-grid">
                 <div class="stat-card">
-                    <div class="num">2</div>
+                    <div class="num">3</div>
                     <div class="desc">Bots de Telegram activos</div>
                 </div>
                 <div class="stat-card">
-                    <div class="num">7</div>
-                    <div class="desc">Servicios runsv gestionados</div>
+                    <div class="num">9</div>
+                    <div class="desc">Servicios runsv en ejecución</div>
                 </div>
                 <div class="stat-card">
                     <div class="num">1</div>
                     <div class="desc">Túnel Cloudflare · 3 hostnames</div>
                 </div>
                 <div class="stat-card">
-                    <div class="num">1</div>
-                    <div class="desc">Base SQLite en producción</div>
+                    <div class="num">2</div>
+                    <div class="desc">Bases SQLite en producción</div>
                 </div>
                 <div class="stat-card">
-                    <div class="num">24/7</div>
-                    <div class="desc">Disponibilidad ininterrumpida</div>
+                    <div class="num">672K</div>
+                    <div class="desc">Registros · 19 tablas</div>
                 </div>
                 <div class="stat-card">
-                    <div class="num">1</div>
-                    <div class="desc">Tablet · Sin servidor externo</div>
+                    <div class="num">16</div>
+                    <div class="desc">Automatizaciones programadas</div>
                 </div>
             </div>
         </section>
@@ -1232,7 +1277,7 @@
         <p>Hecho con ❤️ por <span class="brand">Miguelon Campuzano</span> · Ing. Miguel Angel Campuzano Lupera</p>
         <p style="margin-top:6px; font-size:0.75rem;">Guayaquil, Ecuador · OUKITEL RT2 · Termux + PRoot</p>
         <p style="margin-top:6px; font-size:0.7rem;">
-            🐍 Python 3.14 · 🗄️ SQLite · 🤖 DeepSeek AI · 🎤 Groq Whisper · 🏠 Llama 3.2 Local · 🧠 DeepSeek-R1 · 🧠 Hermes Agent · 📱 Telegram API
+            🐍 Python 3.14 · 🗄️ SQLite · 🤖 DeepSeek · 🎤 Groq Whisper · 🕷️ Playwright · ☁️ Cloudflare Tunnel · 🔄 runsv · 🧠 Hermes Agent · 📱 Telegram API
         </p>
     </footer>
     <script>
