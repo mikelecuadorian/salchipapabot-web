@@ -822,6 +822,12 @@
                     <span class="cap-tag">Cron + Telegram API</span>
                 </div>
                 <div class="cap-card">
+                    <span class="cap-icon">🗜️</span>
+                    <h4>Rotación y Compresión de Logs</h4>
+                    <p>26 archivos de log bajo política única: rotación por tamaño, compresión gzip y <code>copytruncate</code> para no perder la escritura de procesos con el descriptor abierto. Los 47 MB de histórico bajaron a 18 MB sin borrar una sola línea.</p>
+                    <span class="cap-tag">logrotate + gzip</span>
+                </div>
+                <div class="cap-card">
                     <span class="cap-icon">🔄</span>
                     <h4>Auto-Recuperación de Servicios</h4>
                     <p>Cada servicio corre bajo <code>runsv</code>: si un proceso se cae, se levanta solo. Supervisión real con reinicio automático y rotación de logs.</p>
@@ -978,6 +984,11 @@
                       <span class="desc">Supervisor de servicios</span>
                     </div>
                     <div class="tech-item">
+                      <span class="emoji">🗜️</span>
+                      <span class="name">logrotate + gzip</span>
+                      <span class="desc">Rotación y compresión de logs</span>
+                    </div>
+                    <div class="tech-item">
                       <span class="emoji">☁️</span>
                       <span class="name">Cloudflare Tunnel</span>
                       <span class="desc">HTTPS público</span>
@@ -1108,6 +1119,16 @@
                     </div>
                 </div>
                 <div class="infra-layer">
+                    <span class="layer-label">Operación</span>
+                    <div class="items">
+                        <span class="item highlight">logrotate · 26 logs</span>
+                        <span class="item">gzip + copytruncate</span>
+                        <span class="item">crond (rotación horaria)</span>
+                        <span class="item">sqlite3 integrity_check</span>
+                        <span class="item">alertas_recursos (disco/RAM/carga)</span>
+                    </div>
+                </div>
+                <div class="infra-layer">
                     <span class="layer-label">Red</span>
                     <div class="items">
                         <span class="item highlight">Telegram Bot API</span>
@@ -1233,9 +1254,17 @@
                     </div>
                 </div>
                 <div class="timeline-item">
+                    <span class="tl-date">Oct 2026</span>
+                    <div class="tl-content">
+                        <h4>🗜️ Rotación y Compresión de Logs</h4>
+                        <p>Los 26 logs del ecosistema pasan a una política única de rotación por tamaño con gzip y <code>copytruncate</code>, ejecutada por crond cada hora. El histórico bajó de 47 MB a 18 MB sin perder una línea, y el descubrimiento de que <code>runsvdir</code> corre huérfano en esta tablet dejó documentado el camino.</p>
+                        <span class="tl-tag">logrotate · gzip</span>
+                    </div>
+                </div>
+                <div class="timeline-item">
                     <span class="tl-date">Hoy</span>
                     <div class="tl-content">
-                        <h4>🔥 3 Bots · 9 Servicios · 672K Registros</h4>
+                        <h4>🔥 3 Bots · 11 Servicios · 672K Registros</h4>
                         <p>Todo corriendo 24/7 desde una tablet OUKITEL RT2 en Guayaquil, Ecuador. Sin servidores externos, sin costos mensuales.</p>
                         <span class="tl-tag">Hecho en Ecuador 🇪🇨</span>
                     </div>
@@ -1251,7 +1280,7 @@
                     <div class="desc">Bots de Telegram activos</div>
                 </div>
                 <div class="stat-card">
-                    <div class="num">9</div>
+                    <div class="num">11</div>
                     <div class="desc">Servicios runsv en ejecución</div>
                 </div>
                 <div class="stat-card">
@@ -1270,6 +1299,10 @@
                     <div class="num">16</div>
                     <div class="desc">Automatizaciones programadas</div>
                 </div>
+                <div class="stat-card">
+                    <div class="num">26</div>
+                    <div class="desc">Logs con rotación + gzip</div>
+                </div>
             </div>
         </section>
     </div>
@@ -1277,7 +1310,7 @@
         <p>Hecho con ❤️ por <span class="brand">Miguelon Campuzano</span> · Ing. Miguel Angel Campuzano Lupera</p>
         <p style="margin-top:6px; font-size:0.75rem;">Guayaquil, Ecuador · OUKITEL RT2 · Termux + PRoot</p>
         <p style="margin-top:6px; font-size:0.7rem;">
-            🐍 Python 3.14 · 🗄️ SQLite · 🤖 DeepSeek · 🎤 Groq Whisper · 🕷️ Playwright · ☁️ Cloudflare Tunnel · 🔄 runsv · 🧠 Hermes Agent · 📱 Telegram API
+            🐍 Python 3.14 · 🗄️ SQLite · 🤖 DeepSeek · 🎤 Groq Whisper · 🕷️ Playwright · ☁️ Cloudflare Tunnel · 🔄 runsv · 🗜️ logrotate · 🧠 Hermes Agent · 📱 Telegram API
         </p>
     </footer>
     <script>
