@@ -1,0 +1,106 @@
+<!DOCTYPE html><html lang="es"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Todos los puntos - Consorcio ART</title>
+<link rel="stylesheet" href="leaflet/leaflet.css"/>
+<style>
+ body{margin:0;font-family:-apple-system,system-ui,sans-serif;background:#0d1117;color:#c9d1d9}
+ .leaflet-container{background:#aad3df}
+ #map{height:calc(100vh - 76px)}
+ #hdr{padding:8px 14px;background:#161b22;border-bottom:1px solid #30363d;
+      display:flex;gap:14px;align-items:center;flex-wrap:wrap}
+ #hdr h1{margin:0;font-size:15px;color:#58a6ff;white-space:nowrap}
+ #hdr .stat{font-size:12px;color:#8b949e}
+ #hdr .stat b{color:#c9d1d9}
+ #hdr select{background:#21262d;color:#c9d1d9;border:1px solid #30363d;
+             border-radius:6px;padding:4px 8px;font-size:12px;max-width:220px}
+ .leyenda{position:absolute;bottom:18px;right:14px;background:rgba(22,27,34,.94);
+   border:1px solid #30363d;border-radius:8px;padding:8px 12px;font-size:11px;
+   z-index:1000;max-height:220px;overflow:auto;line-height:1.6;display:none}
+ .leyenda b{display:block;margin-bottom:6px;color:#58a6ff}
+ .sw{display:inline-block;width:10px;height:10px;border-radius:50%;
+     margin-right:5px;vertical-align:middle}
+ #cargando{position:absolute;inset:0;display:flex;align-items:center;
+   justify-content:center;background:#0d1117;color:#58a6ff;font-size:14px;z-index:2000}
+</style></head><body>
+<div id="hdr">
+  <h1>📍 Todos los predios</h1>
+  <span class="stat"><b id="npunt">—</b> puntos</span>
+  <span class="stat"><b id="npred">—</b> predios</span>
+  <select id="fparq"><option value="">Todas las parroquias</option></select>
+  <select id="fcuad"><option value="">Todas las cuadrillas</option></select>
+  <span class="stat" id="nvis"></span>
+</div>
+<div id="map"></div>
+<div class="leyenda" id="ley"></div>
+<div id="cargando">Cargando puntos…</div>
+<script src="leaflet/leaflet.js"></script>
+<script src="puntos_data.js"></script>
+<script>
+var map = L.map('map', {preferCanvas:true, zoomControl:true}).setView([-2.10,-79.86],10);
+L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{
+  maxZoom:19, attribution:'&copy; OpenStreetMap'}).addTo(map);
+
+document.getElementById('npunt').textContent = PUNTOS.length.toLocaleString('es-EC');
+document.getElementById('npred').textContent = TOTAL.toLocaleString('es-EC');
+
+// Radio por zoom: a zoom bajo los puntos se achican para no tapar la ciudad
+function radio(){ return Math.max(1.2, Math.min(5, Math.pow(1.35, map.getZoom()-12) * 2)); }
+
+var capa = L.layerGroup().addTo(map);
+var parqSel = document.getElementById('fparq');
+var cuadSel = document.getElementById('fcuad');
+
+// Poblar filtros
+var parqs = {}, cuads = {};
+PUNTOS.forEach(function(p){ parqs[p[4]]=(parqs[p[4]]||0)+p[3]; cuads[p[5]]=(cuads[p[5]]||0)+p[3]; });
+Object.keys(parqs).sort(function(a,b){return parqs[b]-parqs[a];}).forEach(function(k){
+  var o=document.createElement('option'); o.value=k;
+  o.textContent=k+' ('+parqs[k].toLocaleString('es-EC')+')'; parqSel.appendChild(o);
+});
+Object.keys(cuads).sort(function(a,b){return cuads[b]-cuads[a];}).forEach(function(k){
+  var o=document.createElement('option'); o.value=k;
+  o.textContent=k+' ('+cuads[k].toLocaleString('es-EC')+')'; cuadSel.appendChild(o);
+});
+
+function dibujar(){
+  capa.clearLayers();
+  var fp=parqSel.value, fc=cuadSel.value, r=radio(), n=0;
+  var radio_max=0;
+  PUNTOS.forEach(function(p){
+    if(fp && p[4]!==fp) return;
+    if(fc && p[5]!==fc) return;
+    n += p[3];
+    var rr = r * (p[3]>50 ? 1.9 : p[3]>10 ? 1.4 : 1);
+    L.circleMarker([p[0],p[1]], {
+      radius: rr, color:p[2], weight:0, fillColor:p[2], fillOpacity:0.62
+    }).bindPopup(
+      '<div style="font-family:system-ui;font-size:12px">'+
+      '<b>'+p[4]+'</b><br>'+
+      p[5]+'<br>'+
+      '<b style="color:'+p[2]+'">'+p[3].toLocaleString('es-EC')+'</b> predio'+(p[3]>1?'s':'')+
+      '<br><span style="color:#8b949e;font-size:11px">'+p[0].toFixed(5)+', '+p[1].toFixed(5)+'</span></div>'
+    ).addTo(capa);
+  });
+  document.getElementById('nvis').textContent = n.toLocaleString('es-EC')+' predios visibles';
+}
+parqSel.onchange = function(){ dibujar(); armarLeyenda(); };
+cuadSel.onchange = function(){ dibujar(); armarLeyenda(); };
+map.on('zoomend', dibujar);
+
+function armarLeyenda(){
+  var fp=parqSel.value, fc=cuadSel.value, c={};
+  PUNTOS.forEach(function(p){
+    if(fp && p[4]!==fp) return;
+    if(fc && p[5]!==fc) return;
+    c[p[5]]=(c[p[5]]||0)+p[3];
+  });
+  var ks=Object.keys(c).sort(function(a,b){return c[b]-c[a];}).slice(0,18);
+  document.getElementById('ley').innerHTML='<b>Cuadrilla (predios)</b>'+ks.map(function(k){
+    return '<span class="sw" style="background:'+COLORES[k]+'"></span>'+k+
+           ' <span style="color:#8b949e">'+c[k].toLocaleString('es-EC')+'</span>';
+  }).join('<br>');
+}
+
+dibujar();
+document.getElementById('cargando').style.display='none';
+</script></body></html>

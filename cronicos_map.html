@@ -1,0 +1,106 @@
+<!DOCTYPE html><html lang="es"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Puntos crónicos - Consorcio ART</title>
+<link rel="stylesheet" href="leaflet/leaflet.css"/>
+<style>
+ body{margin:0;font-family:-apple-system,system-ui,sans-serif;background:#0d1117;color:#c9d1d9}
+ .leaflet-container{background:#aad3df}
+ #map{height:calc(100vh - 96px)}
+ #hdr{padding:8px 14px;background:#161b22;border-bottom:1px solid #30363d;
+      display:flex;gap:12px;align-items:center;flex-wrap:wrap}
+ #hdr h1{margin:0;font-size:15px;color:#58a6ff;white-space:nowrap}
+ #hdr .stat{font-size:12px;color:#8b949e}
+ #hdr .stat b{color:#c9d1d9}
+ #hdr select{background:#21262d;color:#c9d1d9;border:1px solid #30363d;
+             border-radius:6px;padding:4px 8px;font-size:12px;max-width:200px}
+ .leyenda{position:absolute;bottom:18px;right:14px;background:rgba(22,27,34,.95);
+   border:1px solid #30363d;border-radius:8px;padding:10px 12px;font-size:11px;z-index:1000;line-height:1.8}
+ .leyenda b{display:block;margin-bottom:6px;color:#58a6ff;font-size:11px}
+ .sw{display:inline-block;width:11px;height:11px;border-radius:50%;margin-right:6px;vertical-align:middle}
+</style></head><body>
+<div id="hdr">
+  <h1>🔴 Puntos crónicos</h1>
+  <span class="stat"><b id="np">—</b> puntos con pendiente</span>
+  <select id="fparq"><option value="">Todas las parroquias</option></select>
+  <select id="ftramo">
+    <option value="">Cualquier antigüedad</option>
+    <option value="30">Activo (≤30 días)</option>
+    <option value="90">31–90 días</option>
+    <option value="180">91–180 días</option>
+    <option value="365">181–365 días</option>
+    <option value="-1">Fantasma (+365 días)</option>
+  </select>
+  <span class="stat" id="nvis"></span>
+</div>
+<div id="map"></div>
+<div class="leyenda">
+  <b>Antigüedad del último trámite</b>
+  <span class="sw" style="background:#3fb950"></span>≤30 días (activo)<br>
+  <span class="sw" style="background:#d29922"></span>31–180 días<br>
+  <span class="sw" style="background:#ff7b72"></span>181–365 días<br>
+  <span class="sw" style="background:#c00000"></span>+365 días (fantasma)<br>
+  <span style="color:#8b949e">Tamaño = trámites acumulados</span>
+</div>
+<script src="leaflet/leaflet.js"></script>
+<script src="cronicos_data.js"></script>
+<script>
+var map = L.map('map',{preferCanvas:true}).setView([-2.10,-79.86],10);
+L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{
+  maxZoom:19, attribution:'&copy; OpenStreetMap'}).addTo(map);
+
+function color(d){
+  if(d<=30) return '#3fb950';
+  if(d<=180) return '#d29922';
+  if(d<=365) return '#ff7b72';
+  return '#c00000';
+}
+document.getElementById('np').textContent = CRONICOS.length.toLocaleString('es-EC');
+
+var parqSel=document.getElementById('fparq'), tramoSel=document.getElementById('ftramo');
+var parqs={};
+CRONICOS.forEach(function(p){ parqs[p.p]=(parqs[p.p]||0)+p.np; });
+Object.keys(parqs).sort(function(a,b){return parqs[b]-parqs[a];}).forEach(function(k){
+  var o=document.createElement('option'); o.value=k;
+  o.textContent=k+' ('+parqs[k].toLocaleString('es-EC')+' pend.)'; parqSel.appendChild(o);
+});
+
+var capa = L.layerGroup().addTo(map);
+function pasaTramo(d, t){
+  if(!t) return true;
+  t = parseInt(t);
+  if(t===-1) return d>365;
+  if(t===30) return d<=30;
+  if(t===90) return d>30 && d<=90;
+  if(t===180) return d>90 && d<=180;
+  if(t===365) return d>180 && d<=365;
+  return true;
+}
+function dibujar(){
+  capa.clearLayers();
+  var fp=parqSel.value, ft=tramoSel.value, n=0, np=0;
+  CRONICOS.forEach(function(p){
+    if(fp && p.p!==fp) return;
+    if(!pasaTramo(p.d, ft)) return;
+    n++; np += p.np;
+    var r = Math.min(14, 4 + Math.sqrt(p.nt)*1.1 + (p.np>=5?2:0));
+    L.circleMarker([p.lat,p.lon],{
+      radius:r, color:'#0d1117', weight:1,
+      fillColor:color(p.d), fillOpacity:0.85
+    }).bindPopup(
+      '<div style="font-family:system-ui;font-size:12px;min-width:210px">'+
+      '<b style="color:'+color(p.d)+'">'+p.nt+' trámites</b> · <b>'+p.np+' sin ejecutar</b><br>'+
+      '<span style="color:#8b949e">'+p.p+'</span><br>'+
+      '<span style="font-size:11px">'+p.dir+'</span><br>'+
+      '<hr style="border:0;border-top:1px solid #30363d;margin:6px 0">'+
+      'Última cuadrilla: <b>'+p.cu+'</b><br>'+
+      p.nc+' cuadrilla'+(p.nc>1?'s':'')+' distintas<br>'+
+      'Último trámite: hace <b>'+p.d+'</b> días</div>'
+    ).addTo(capa);
+  });
+  document.getElementById('nvis').textContent =
+    n.toLocaleString('es-EC')+' puntos · '+np.toLocaleString('es-EC')+' pendientes';
+}
+parqSel.onchange = tramoSel.onchange = dibujar;
+map.on('zoomend', dibujar);
+dibujar();
+</script></body></html>

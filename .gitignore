@@ -41,6 +41,16 @@ tramites_recl.xlsx
 
 # Adjuntos del buzón tablet ↔ Windows (datos, no código)
 buzon_archivos/
+
+# KML de zonas (2026-10-25): 8 archivos, 43 MB de puntos generados desde la BD.
+# Son datos reproducibles, no código. El servidor los sirve desde disco igual.
+# Meterlos al repo lo inflaría para siempre (git nunca suelta la historia).
+kml/*.kml
+
+# Datos generados de mapas (2026-10-25): coordenadas exportadas de la BD.
+# Se regeneran con el script; las páginas que los consumen SÍ van al repo.
+cronicos_data.js
+puntos_data.js
 # energia.html se movio al repo energia-ec (2026-10-21) - servidor propio en :8090
 
 # El dashboard de energia tiene su propio repo (energia-ec) y su propio servicio (puerto 8090)

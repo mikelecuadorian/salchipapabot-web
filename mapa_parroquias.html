@@ -1,0 +1,71 @@
+<!DOCTYPE html><html lang="es"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Parroquias - Consorcio ART</title>
+<link rel="stylesheet" href="leaflet/leaflet.css"/>
+<style>
+ body{margin:0;font-family:-apple-system,system-ui,sans-serif;background:#0d1117;color:#c9d1d9}
+ .leaflet-container{background:#aad3df}
+ #map{height:calc(100vh - 118px)}
+ #hdr{padding:10px 14px;background:#161b22;border-bottom:1px solid #30363d}
+ #hdr h1{margin:0;font-size:16px;color:#58a6ff}
+ #hdr p{margin:4px 0 0;font-size:12px;color:#8b949e}
+ #lg{position:absolute;bottom:22px;right:12px;z-index:500;background:#161b22ee;border:1px solid #30363d;
+     border-radius:8px;padding:9px 11px;font-size:11px;line-height:1.7}
+ .dot{display:inline-block;width:10px;height:10px;border-radius:50%;margin-right:6px;vertical-align:middle}
+ .lf{background:#161b22;color:#c9d1d9;border:1px solid #30363d;border-radius:6px;padding:2px 5px;font-size:11px}
+ .leaflet-popup-content{font-size:12px;margin:8px 10px;line-height:1.5}
+ .leaflet-popup-content-wrapper{background:#161b22;color:#c9d1d9;border:1px solid #30363d}
+ .leaflet-popup-tip{background:#161b22}
+ .leaflet-popup-content b{color:#58a6ff}
+ table{border-collapse:collapse;font-size:11px;margin-top:4px}
+ td{padding:1px 6px 1px 0}
+
+</style></head><body>
+<div id="hdr"><h1>&#128205; Parroquias del Consorcio ART &mdash; cobertura operativa</h1>
+<p>Burbuja = volumen de emergencias &middot; naranja = sin emergencias registradas &middot; clic para ver cuadrillas</p></div>
+<div id="map"></div>
+
+<div id="lg"><span class="dot" style="background:#f85149"></span>&gt; 4000 emergencias<br>
+<span class="dot" style="background:#d29922"></span>1000 &ndash; 4000<br>
+<span class="dot" style="background:#3fb950"></span>100 &ndash; 1000<br>
+<span class="dot" style="background:#8b949e"></span>&lt; 100<br>
+<span class="dot" style="background:#f0883e"></span>sin emergencias</div>
+<script src="leaflet/leaflet.js"></script>
+<script>
+const D = [{"p": "DURÁN (ELOY ALFARO)", "lat": -2.17759, "lon": -79.83911, "n": 15938, "emer": 5002, "cuadrillas": [["CARLOS PEREZ", 980], ["CARLOS MIRANDA MOLESTINA", 941], ["TOMMY SAMANIEGO", 532], ["JOSE TAMAYO", 512], ["CARLOS GUARACA", 447], ["EDINSON QUIÑONEZ", 424]]}, {"p": "LA AURORA (SATÉLITE)", "lat": -2.03763, "lon": -79.89561, "n": 15274, "emer": 7609, "cuadrillas": [["ORELLANA MEZA WILLIAM BOLIVAR", 1570], ["ROBERTO BRIONES", 1446], ["ULISES HERRERA", 617], ["CARLOS GUARACA", 608], ["EDINSON QUIÑONEZ", 556], ["CARLOS PEREZ", 452]]}, {"p": "DIVINO NIÑO", "lat": -2.15966, "lon": -79.82937, "n": 8472, "emer": 2575, "cuadrillas": [["CARLOS MIRANDA MOLESTINA", 536], ["CARLOS PEREZ", 366], ["TOMMY SAMANIEGO", 277], ["CARLOS GUARACA", 264], ["EDINSON QUIÑONEZ", 203], ["JOSE TAMAYO", 194]]}, {"p": "LA PUNTILLA (SATÉLITE)", "lat": -2.10281, "lon": -79.86239, "n": 6611, "emer": 1895, "cuadrillas": [["ROBERTO BRIONES", 384], ["ORELLANA MEZA WILLIAM BOLIVAR", 355], ["ULISES HERRERA", 175], ["CARLOS GUARACA", 123], ["TOMMY SAMANIEGO", 114], ["CARLOS PEREZ", 107]]}, {"p": "EL RECREO", "lat": -2.17244, "lon": -79.80397, "n": 6551, "emer": 1745, "cuadrillas": [["CARLOS MIRANDA MOLESTINA", 383], ["TOMMY SAMANIEGO", 218], ["CARLOS PEREZ", 212], ["MANUEL CUZCO", 177], ["CARLOS GUARACA", 158], ["EDINSON QUIÑONEZ", 125]]}, {"p": "SAMBORONDÓN", "lat": -1.96106, "lon": -79.72735, "n": 2877, "emer": 524, "cuadrillas": [["ORLYN CABRERA", 131], ["BRYAN ACOSTA", 71], ["ANTHONY MOSQUERA", 50], ["ULISES HERRERA", 47], ["ROBERTO BRIONES", 25], ["CARLOS PEREZ", 24]]}, {"p": "TARIFA", "lat": -1.98485, "lon": -79.75988, "n": 2022, "emer": 530, "cuadrillas": [["ORLYN CABRERA", 121], ["BRYAN ACOSTA", 110], ["ULISES HERRERA", 39], ["CARLOS GUARACA", 31], ["ROBERTO BRIONES", 26], ["ANTHONY MOSQUERA", 25]]}, {"p": "OCHOA LEÓN (MATRIZ)", "lat": -3.32896, "lon": -79.80766, "n": 484, "emer": 0, "cuadrillas": []}, {"p": "PUNÁ", "lat": -2.82071, "lon": -80.13559, "n": 405, "emer": 51, "cuadrillas": [["SERGIO CASTRO", 36], ["ACCEL CEVALLOS", 6], ["EDINSON QUIÑONEZ", 2], ["TOMMY SAMANIEGO", 2], ["CARLOS GUARACA", 1], ["CARLOS MIRANDA MOLESTINA", 1]]}, {"p": "LA VICTORIA (ÑAUZA)", "lat": -1.89898, "lon": -79.72124, "n": 369, "emer": 76, "cuadrillas": [["ORLYN CABRERA", 16], ["ULISES HERRERA", 12], ["BRYAN ACOSTA", 8], ["CARLOS GUARACA", 8], ["NELSON ACURIO", 6], ["JORGE MIRANDA", 5]]}, {"p": "LOS LOJAS (ENRIQUE BAQUERIZO MORENO)", "lat": -1.97078, "lon": -79.88305, "n": 316, "emer": 119, "cuadrillas": [["ROBERTO BRIONES", 27], ["ORELLANA MEZA WILLIAM BOLIVAR", 14], ["CHRISTOFFER JHONNY VILLON AGUI", 11], ["CARLOS PEREZ", 8], ["ORLYN CABRERA", 7], ["CARLOS GUARACA", 6]]}, {"p": "EL GUABO", "lat": -3.24241, "lon": -79.83344, "n": 293, "emer": 0, "cuadrillas": []}, {"p": "CAMILO PONCE ENRÍQUEZ", "lat": -3.06152, "lon": -79.74472, "n": 198, "emer": 0, "cuadrillas": []}, {"p": "BALAO", "lat": -2.91026, "lon": -79.8095, "n": 138, "emer": 0, "cuadrillas": []}, {"p": "RÍO BONITO", "lat": -3.10489, "lon": -79.76599, "n": 103, "emer": 0, "cuadrillas": []}, {"p": "NARANJAL", "lat": -2.80181, "lon": -79.70684, "n": 97, "emer": 0, "cuadrillas": []}, {"p": "BOLÍVAR", "lat": -3.32778, "lon": -79.80517, "n": 95, "emer": 0, "cuadrillas": []}, {"p": "SAN JACINTO DE YAGUACHI", "lat": -2.09426, "lon": -79.7817, "n": 53, "emer": 0, "cuadrillas": []}, {"p": "PROGRESO", "lat": -3.28741, "lon": -79.7848, "n": 52, "emer": 0, "cuadrillas": []}, {"p": "PASAJE", "lat": -3.32898, "lon": -79.80651, "n": 50, "emer": 0, "cuadrillas": []}, {"p": "TENGUEL", "lat": -2.99766, "lon": -79.78877, "n": 48, "emer": 0, "cuadrillas": []}, {"p": "TRES CERRITOS", "lat": -3.32611, "lon": -79.77028, "n": 47, "emer": 0, "cuadrillas": []}, {"p": "PIMOCHA", "lat": -1.89722, "lon": -79.64441, "n": 44, "emer": 4, "cuadrillas": [["ORLYN CABRERA", 2], ["JONATHAN MONTES", 1], ["ULISES HERRERA", 1]]}, {"p": "LOMA DE FRANCO", "lat": -3.33922, "lon": -79.79166, "n": 40, "emer": 0, "cuadrillas": []}, {"p": "BARBONES (SUCRE)", "lat": -3.18918, "lon": -79.85765, "n": 31, "emer": 0, "cuadrillas": []}, {"p": "ABAÑÍN", "lat": -3.3391, "lon": -79.53237, "n": 25, "emer": 0, "cuadrillas": []}, {"p": "JUAN BAUTISTA AGUIRRE (LOS TINTOS)", "lat": -1.9485, "lon": -79.88721, "n": 21, "emer": 7, "cuadrillas": [["ROBERTO BRIONES", 4], ["EDINSON QUIÑONEZ", 1], ["JOHNNY GARCIA", 1], ["TOMMY SAMANIEGO", 1]]}, {"p": "CASACAY", "lat": -3.32085, "lon": -79.71364, "n": 18, "emer": 0, "cuadrillas": []}, {"p": "TENDALES (CAB.EN PUERTO TENDALES)", "lat": -3.12094, "lon": -79.84961, "n": 16, "emer": 0, "cuadrillas": []}, {"p": "LA PEAÑA", "lat": -3.31155, "lon": -79.85302, "n": 14, "emer": 0, "cuadrillas": []}, {"p": "CHILLA", "lat": -3.36644, "lon": -79.48354, "n": 11, "emer": 0, "cuadrillas": []}, {"p": "BUENAVISTA", "lat": -3.36273, "lon": -79.82482, "n": 10, "emer": 0, "cuadrillas": []}, {"p": "BABA", "lat": -1.86559, "lon": -79.67263, "n": 9, "emer": 0, "cuadrillas": []}, {"p": "PUCARÁ", "lat": -3.31466, "lon": -79.59531, "n": 9, "emer": 0, "cuadrillas": []}, {"p": "DAULE", "lat": -1.95584, "lon": -79.90163, "n": 8, "emer": 5, "cuadrillas": [["ROBERTO BRIONES", 2], ["CARLOS PEREZ", 1], ["HAROLD VELOZ", 1], ["ORELLANA MEZA WILLIAM BOLIVAR", 1]]}, {"p": "VICTORIA", "lat": -3.39419, "lon": -79.86404, "n": 8, "emer": 0, "cuadrillas": []}, {"p": "BOCANA", "lat": -1.89731, "lon": -79.74917, "n": 6, "emer": 0, "cuadrillas": []}, {"p": "EL CAMBIO", "lat": -3.25874, "lon": -79.87329, "n": 6, "emer": 0, "cuadrillas": []}, {"p": "LA IBERIA", "lat": -3.22845, "lon": -79.88829, "n": 6, "emer": 0, "cuadrillas": []}, {"p": "SANTA LUCÍA", "lat": -1.75004, "lon": -79.91555, "n": 3, "emer": 2, "cuadrillas": [["CARLOS ANDRADE", 1], ["TOMMY SAMANIEGO", 1]]}];
+const m = L.map('map',{scrollWheelZoom:true}).setView([-1.83,-78.18],7);
+// Encuadre inicial: Ecuador continental completo, para situar las parroquias en el pais.
+// Con el zoom bajo las burbujas quedan visibles como referencia; al acercar aparece el detalle.
+
+// Tiles de OpenStreetMap: libres, sin API key. (CARTO pide key en algunos CDN
+// y hacia que el mapa mostrara "API KEY REQUIRED" - corregido 2026-10-23.)
+L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
+  {attribution:'&copy; OpenStreetMap contributors',subdomains:'abc',maxZoom:19,
+   errorTileUrl:''}).addTo(m);
+function col(e){ if(e>4000)return'#f85149'; if(e>1000)return'#d29922'; if(e>100)return'#3fb950'; if(e>0)return'#8b949e'; return'#f0883e'; }
+// Radio escalado por zoom: con el pais completo (z7) las burbujas deben verse;
+// al acercar se reducen para no tapar la zona.
+function rad(e){ var z=m.getZoom(); var base=Math.max(9, Math.sqrt(e||1)*1.15);
+  if(z<=7) return base*1.6; if(z==8) return base*1.25; if(z==9) return base; return base*0.8; }
+D.forEach(function(d){
+  const c=col(d.emer);
+  L.circleMarker([d.lat,d.lon],{radius:rad(d.emer),color:c,fillColor:c,fillOpacity:.42,weight:2})
+   .addTo(m)
+   .bindPopup('<b>'+d.p+'</b><br>Tr&aacute;mites: '+d.n.toLocaleString('es-EC')+
+     '<br>Emergencias: '+d.emer.toLocaleString('es-EC')+
+     (d.cuadrillas.length?'<table>'+d.cuadrillas.map(function(x){
+        return '<tr><td>'+x[0]+'</td><td><b>'+x[1]+'</b></td></tr>';}).join('')+'</table>':'<br><i>sin cuadrilla registrada</i>'))
+   .bindTooltip(d.p,{className:'lf',direction:'top'});
+});
+D.forEach(function(d){ L.marker([d.lat,d.lon],{opacity:0.01}).addTo(m)
+   .bindTooltip(d.p+' &mdash; '+d.emer.toLocaleString('es-EC')+' emerg.',{className:'lf'}); });
+
+// Reajustar el tamano de las burbujas segun el zoom
+var marcadores=[];
+m.eachLayer(function(l){ if(l instanceof L.CircleMarker) marcadores.push(l); });
+function ajustar(){ marcadores.forEach(function(l){ l.setRadius(rad(l.__emer||1)); }); }
+marcadores.forEach(function(l,i){ l.__emer = D[i] ? D[i].emer : 1; });
+m.on('zoomend', ajustar);
+ajustar();
+
+</script></body></html>
