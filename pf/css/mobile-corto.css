@@ -1,0 +1,35 @@
+/* ============================================================
+   Ajuste fino para móviles cortos (iPhone SE, 375x667 y similares)
+   Objetivo: las 6 habilidades completas dentro del primer viewport.
+   ============================================================ */
+@media (max-width: 400px) and (max-height: 700px) {
+  .topbar .row { padding-block: .3rem; }
+  .topbar .brand { font-size: .8rem; }
+  .topbar .live { font-size: .64rem; padding: .2rem .45rem; }
+
+  .hero { padding-top: .6rem; padding-bottom: .8rem; }
+  .hero .who { font-size: .58rem; margin-bottom: .28rem; line-height: 1.35; }
+  .hero h1 { font-size: clamp(1.45rem, 7vw, 1.75rem); margin-bottom: .35rem; line-height: 1.08; }
+  .hero .lead {
+    font-size: .84rem; line-height: 1.42;
+    display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden;
+  }
+  .hero-cta { margin-top: .6rem; gap: .3rem; }
+  .hero-cta .btn:nth-child(3) { display: none; }
+  .btn { padding: .42rem .7rem; font-size: .72rem; }
+
+  .metrics { margin-top: .65rem; gap: .35rem; }
+  .metric { padding: .42rem .35rem; }
+  .metric .n { font-size: 1.05rem; }
+  .metric .l { font-size: .53rem; }
+  .metric .src { display: none; }
+
+  .skills-strip { margin-top: .7rem; }
+  .strip-head { margin-bottom: .35rem; }
+  .strip-head span:first-child { font-size: .64rem; }
+  .skill-grid { gap: .32rem; }
+  .skill { padding: .38rem .45rem; }
+  .skill .si { font-size: .78rem; margin-bottom: .06rem; }
+  .skill .sn { font-size: .67rem; line-height: 1.2; }
+  .skill .sd { display: none; }
+}

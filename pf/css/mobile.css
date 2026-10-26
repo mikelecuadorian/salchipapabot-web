@@ -1,0 +1,58 @@
+/* ============================================================
+   Ajuste móvil · Habilidades visibles sin scroll
+   Estrategia: en móvil NO se intenta reordenar el CSS (el aside
+   vive en otro bloque y 'order' no lo mueve). En su lugar:
+   1) se comprime el hero para que quepa en el primer viewport
+   2) el panel de estado se oculta al final (se muestra tras las skills)
+   El panel no se pierde: queda más abajo, tras las habilidades.
+   ============================================================ */
+
+@media (max-width: 860px) {
+  .hero-grid { grid-template-columns: 1fr; }
+}
+
+@media (max-width: 620px) {
+  .topbar .row { padding-block: .42rem; }
+  .hero { padding-top: .9rem; padding-bottom: 1.2rem; }
+  .hero-grid { gap: .8rem; }
+
+  .hero h1 { font-size: clamp(1.6rem, 7.8vw, 2.1rem); margin-bottom: .45rem; line-height: 1.1; }
+  .hero .who { font-size: .63rem; letter-spacing: .09em; margin-bottom: .35rem; }
+  .hero .lead { font-size: .9rem; line-height: 1.45; }
+  .hero-cta { margin-top: .7rem; gap: .35rem; }
+  .btn { padding: .46rem .8rem; font-size: .76rem; }
+
+  .metrics { margin-top: .8rem; gap: .4rem; }
+  .metric { padding: .5rem .4rem; }
+  .metric .n { font-size: 1.18rem; }
+  .metric .l { font-size: .57rem; letter-spacing: .03em; line-height: 1.2; }
+  .metric .src { display: none; }
+
+  /* El panel de estado baja: se oculta del bloque del hero en móvil */
+  aside.hero-panel { display: none; }
+
+  .skills-strip { margin-top: .85rem; }
+  .strip-head { margin-bottom: .45rem; }
+  .strip-head span:last-child { display: none; }
+  .skill-grid { grid-template-columns: repeat(2, 1fr); gap: .38rem; }
+  .skill { padding: .46rem .52rem; }
+  .skill .si { font-size: .86rem; margin-bottom: .12rem; }
+  .skill .sn { font-size: .72rem; line-height: 1.25; }
+  .skill .sd { display: none; }
+}
+
+@media (max-width: 420px) {
+  .hero .lead { display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
+  .hero-cta .btn:nth-child(3) { display: none; }
+  .metric .l { font-size: .54rem; }
+}
+
+/* ---------- Panel de estado reubicado (visible en móvil, más abajo) ---------- */
+.panel-movil { display: none; }
+@media (max-width: 620px) {
+  .panel-movil { display: block; margin-top: 1.2rem; }
+  .panel-movil .hero-panel { padding: .75rem .85rem; }
+  .panel-movil .hp-title { margin-bottom: .45rem; font-size: .64rem; }
+  .panel-movil .hp-row { padding: .3rem 0; font-size: .76rem; }
+  .panel-movil .hp-row .v { font-size: .74rem; }
+}

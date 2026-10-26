@@ -1,0 +1,132 @@
+/* ============================================================
+   PORTAFOLIO · Ing. Miguel Angel Campuzano Lupera
+   Bloques 1/4 — base, tokens, layout, tipografía responsiva
+   ============================================================ */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --bg: #08080c;
+  --bg-soft: #0e0e15;
+  --card: #13131c;
+  --card-2: #181824;
+  --line: #26263a;
+  --line-2: #34344e;
+  --txt: #eeeeF6;
+  --txt-2: #9c9cb8;
+  --txt-3: #6e6e96;
+  --a1: #7c6cf0;
+  --a2: #00d2c8;
+  --a3: #fd79a8;
+  --grad: linear-gradient(135deg, #7c6cf0 0%, #00d2c8 100%);
+  --ok: #00d68f;
+  --warn: #ffc048;
+  --bad: #ff6b6b;
+  --r: 16px;
+  --r-sm: 10px;
+  --pad: clamp(1rem, 4vw, 2rem);
+  --max: 1180px;
+  --t: .28s cubic-bezier(.4,0,.2,1);
+}
+
+html { scroll-behavior: smooth; -webkit-text-size-adjust: 100%; }
+
+body {
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  background: var(--bg);
+  color: var(--txt);
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+  overflow-x: hidden;
+  font-size: 16px;
+}
+
+/* ---------- Fondo ---------- */
+.bg-layer { position: fixed; inset: 0; pointer-events: none; z-index: 0; }
+.bg-grid {
+  background-image:
+    linear-gradient(rgba(124,108,240,.035) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(124,108,240,.035) 1px, transparent 1px);
+  background-size: 64px 64px;
+  mask-image: radial-gradient(ellipse at 50% 0%, #000 20%, transparent 75%);
+  -webkit-mask-image: radial-gradient(ellipse at 50% 0%, #000 20%, transparent 75%);
+}
+.bg-orb {
+  position: fixed; border-radius: 50%; filter: blur(90px);
+  pointer-events: none; z-index: 0; opacity: .5;
+}
+.bg-orb.o1 { top: -18vh; left: -12vw; width: 46vw; height: 46vw; background: rgba(124,108,240,.30); }
+.bg-orb.o2 { bottom: -22vh; right: -14vw; width: 42vw; height: 42vw; background: rgba(0,210,200,.20); }
+
+/* ---------- Contenedores ---------- */
+.wrap { position: relative; z-index: 1; width: 100%; max-width: var(--max); margin: 0 auto; padding-inline: var(--pad); }
+section { position: relative; z-index: 1; padding-block: clamp(3.5rem, 8vw, 6rem); }
+
+/* ---------- Tipografía fluida ---------- */
+h1 { font-size: clamp(1.9rem, 5.6vw, 3.9rem); line-height: 1.08; letter-spacing: -.025em; font-weight: 800; }
+h2 { font-size: clamp(1.5rem, 3.8vw, 2.35rem); line-height: 1.18; letter-spacing: -.02em; font-weight: 700; margin-bottom: .6rem; }
+h3 { font-size: clamp(1.05rem, 2.2vw, 1.22rem); font-weight: 650; letter-spacing: -.01em; }
+h4 { font-size: clamp(.98rem, 2vw, 1.06rem); font-weight: 600; }
+p  { font-size: clamp(.94rem, 1.9vw, 1.02rem); color: var(--txt-2); }
+code, .mono { font-family: 'JetBrains Mono', ui-monospace, 'SF Mono', Menlo, monospace; }
+
+.grad-text {
+  background: var(--grad);
+  -webkit-background-clip: text; background-clip: text;
+  -webkit-text-fill-color: transparent; color: transparent;
+}
+.hl { color: var(--a2); }
+
+/* ---------- Etiquetas de sección ---------- */
+.eyebrow {
+  display: inline-flex; align-items: center; gap: .45rem;
+  font-size: .72rem; font-weight: 650; letter-spacing: .13em; text-transform: uppercase;
+  color: var(--a1); padding: .3rem .8rem; border-radius: 100px;
+  background: rgba(124,108,240,.10); border: 1px solid rgba(124,108,240,.22);
+  margin-bottom: .9rem;
+}
+.sec-head { max-width: 640px; margin-bottom: clamp(1.6rem, 4vw, 2.6rem); }
+.sec-head p { margin-top: .5rem; }
+
+/* ---------- Rejillas genéricas ---------- */
+.grid { display: grid; gap: clamp(.85rem, 2vw, 1.35rem); }
+.g-2 { grid-template-columns: repeat(auto-fit, minmax(min(100%, 330px), 1fr)); }
+.g-3 { grid-template-columns: repeat(auto-fit, minmax(min(100%, 290px), 1fr)); }
+.g-4 { grid-template-columns: repeat(auto-fit, minmax(min(100%, 210px), 1fr)); }
+
+/* ---------- Tarjetas ---------- */
+.card {
+  background: linear-gradient(180deg, var(--card-2), var(--card));
+  border: 1px solid var(--line);
+  border-radius: var(--r);
+  padding: clamp(1.05rem, 3vw, 1.6rem);
+  position: relative;
+  overflow: hidden;
+  transition: border-color var(--t), transform var(--t), background var(--t);
+}
+.card:hover { border-color: var(--line-2); transform: translateY(-3px); }
+.card .ico { font-size: 1.6rem; display: block; margin-bottom: .6rem; line-height: 1; }
+.card h4 { margin-bottom: .35rem; }
+.card p { font-size: .88rem; line-height: 1.58; }
+.card .pill {
+  display: inline-block; margin-top: .75rem; padding: .22rem .6rem;
+  font-size: .68rem; font-weight: 600; letter-spacing: .04em; text-transform: uppercase;
+  border-radius: 100px; border: 1px solid rgba(124,108,240,.28);
+  color: var(--a1); background: rgba(124,108,240,.08);
+}
+
+/* ---------- Chips ---------- */
+.chips { display: flex; flex-wrap: wrap; gap: .4rem; margin-top: .8rem; }
+.chip {
+  padding: .22rem .62rem; border-radius: 100px; font-size: .72rem; font-weight: 500;
+  background: rgba(255,255,255,.04); border: 1px solid var(--line); color: var(--txt-2);
+}
+.chip.ai  { color: var(--a1); border-color: rgba(124,108,240,.3); background: rgba(124,108,240,.08); }
+.chip.db  { color: var(--a2); border-color: rgba(0,210,200,.3);  background: rgba(0,210,200,.08); }
+.chip.api { color: #74b9ff; border-color: rgba(116,185,255,.3); background: rgba(116,185,255,.08); }
+.chip.op  { color: var(--warn); border-color: rgba(255,192,72,.3); background: rgba(255,192,72,.08); }
+
+/* ---------- Movimiento reducido ---------- */
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+  *, *::before, *::after { animation-duration: .001ms !important; animation-iteration-count: 1 !important; transition-duration: .001ms !important; }
+}
