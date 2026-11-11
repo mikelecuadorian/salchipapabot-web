@@ -1336,8 +1336,15 @@ class APIHandler(SimpleHTTPRequestHandler):
         # Servicios runsv - leer directo de supervise/stat + verificar PID
         try:
             SVDIR = "/data/data/com.termux/files/usr/var/service"
-            svcs = ["salchipapabot", "servidor_web", "sshd_custom", "cloudflared",
-                    "hermes", "hermes_medicina", "hermes_nutricion"]
+            # Descubrir DINAMICAMENTE. Antes habia una lista fija de 7 nombres y
+            # cualquier servicio nuevo (hermes_contabilidad, guardian, crond...)
+            # quedaba invisible en el dashboard: decia "7/7" cuando corrian 17.
+            try:
+                svcs = sorted(d for d in os.listdir(SVDIR)
+                              if os.path.exists(os.path.join(SVDIR, d, "run")))
+            except Exception:
+                svcs = ["salchipapabot", "servidor_web", "sshd_custom", "cloudflared",
+                        "hermes", "hermes_medicina", "hermes_nutricion"]
             servicios = []
             for s in svcs:
                 stat_path = f"{SVDIR}/{s}/supervise/stat"

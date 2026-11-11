@@ -75,12 +75,12 @@
         <!-- ---------- MÉTRICAS ---------- -->
         <div class="metrics">
           <div class="metric">
-            <span class="n">672K</span>
+            <span class="n">754K</span>
             <span class="l">Registros en base</span>
-            <span class="src">18 tablas · medido hoy</span>
+            <span class="src">19 tablas · medido hoy</span>
           </div>
           <div class="metric">
-            <span class="n">11</span>
+            <span class="n">16</span>
             <span class="l">Servicios activos</span>
             <span class="src">runsv · PID vivo</span>
           </div>
@@ -107,11 +107,11 @@
         <div class="hp-row"><span class="k">🐧 Sistema</span><span class="v">Android 12 · PRoot</span></div>
         <div class="hp-row"><span class="k">🔧 Arquitectura</span><span class="v">ARM64</span></div>
         <div class="hp-row"><span class="k">🐍 Runtime</span><span class="v">Python 3.14</span></div>
-        <div class="hp-row"><span class="k">🗄️ Base de datos</span><span class="v">351 MB · SQLite</span></div>
+        <div class="hp-row"><span class="k">🗄️ Base de datos</span><span class="v">385 MB · SQLite</span></div>
         <div class="hp-row"><span class="k">🔄 Supervisor</span><span class="v ok">runsv · activo</span></div>
         <div class="hp-row"><span class="k">☁️ Túnel</span><span class="v ok">Cloudflare · ok</span></div>
-        <div class="hp-row"><span class="k">⏰ Cron</span><span class="v ok">5 tareas · ok</span></div>
-        <div class="hp-row"><span class="k">📋 Logs</span><span class="v">51 en rotación</span></div>
+        <div class="hp-row"><span class="k">⏰ Cron</span><span class="v ok">25 tareas · ok</span></div>
+        <div class="hp-row"><span class="k">📋 Logs</span><span class="v">28 en rotación</span></div>
       </aside>
 
     </div>
@@ -167,11 +167,11 @@
         <div class="hp-row"><span class="k">🐧 Sistema</span><span class="v">Android 12 · PRoot</span></div>
         <div class="hp-row"><span class="k">🔧 Arquitectura</span><span class="v">ARM64</span></div>
         <div class="hp-row"><span class="k">🐍 Runtime</span><span class="v">Python 3.14</span></div>
-        <div class="hp-row"><span class="k">🗄️ Base de datos</span><span class="v">351 MB · SQLite</span></div>
+        <div class="hp-row"><span class="k">🗄️ Base de datos</span><span class="v">385 MB · SQLite</span></div>
         <div class="hp-row"><span class="k">🔄 Supervisor</span><span class="v ok">runsv · activo</span></div>
         <div class="hp-row"><span class="k">☁️ Túnel</span><span class="v ok">Cloudflare · ok</span></div>
-        <div class="hp-row"><span class="k">⏰ Cron</span><span class="v ok">5 tareas · ok</span></div>
-        <div class="hp-row"><span class="k">📋 Logs</span><span class="v">51 en rotación</span></div>
+        <div class="hp-row"><span class="k">⏰ Cron</span><span class="v ok">25 tareas · ok</span></div>
+        <div class="hp-row"><span class="k">📋 Logs</span><span class="v">28 en rotación</span></div>
       </div>
     </div>
 
@@ -204,14 +204,14 @@
       <article class="card reveal">
         <span class="ico">🗄️</span>
         <h4>Consultas SQL en lenguaje natural</h4>
-        <p>672 mil registros en 18 tablas operativas. Se pregunta en español y el agente construye la consulta, la valida y devuelve el dato con su fuente. Carga de XLSX a SQLite y reportes por cuadrilla.</p>
+        <p>754.235 registros en 19 tablas operativas. Se pregunta en español y el agente construye la consulta, la valida y devuelve el dato con su fuente. Carga de XLSX a SQLite y reportes por cuadrilla.</p>
         <span class="pill">SQLite + DeepSeek</span>
       </article>
 
       <article class="card reveal">
         <span class="ico">🗜️</span>
         <h4>Rotación y compresión de logs</h4>
-        <p>51 archivos bajo una política única: rotación por tamaño, gzip y <code>copytruncate</code> para no perder la escritura de procesos con descriptor abierto. El histórico bajó de 47 MB a 18 MB sin borrar una línea.</p>
+        <p>28 archivos bajo una política única: rotación por tamaño, gzip y <code>copytruncate</code> para no perder la escritura de procesos con descriptor abierto. El histórico bajó de 47 MB a 20 MB sin borrar una línea.</p>
         <span class="pill">logrotate + gzip</span>
       </article>
 
@@ -234,6 +234,27 @@
         <h4>Gestión automática de correo</h4>
         <p>Resúmenes de bandeja por cron y respuestas preparadas con datos actualizados de la base. Nada de «respondí por responder»: el agente redacta y el humano aprueba lo delicado.</p>
         <span class="pill">Himalaya + Cron</span>
+      </article>
+
+      <article class="card reveal">
+        <span class="ico">📨</span>
+        <h4>Seguimiento de órdenes por correo</h4>
+        <p>Cada cambio de etapa de una orden se responde solo a CNEL —en proceso, ejecutada, cierre técnico— con datos de ACIIS y SAP. Una respuesta por etapa, con anti-reenvío: ni un correo repetido ni una orden en silencio. Las emergencias se atienden aunque el correo no traiga la frase de gestión.</p>
+        <span class="pill">Himalaya + ACIIS + SAP</span>
+      </article>
+
+      <article class="card reveal">
+        <span class="ico">🧠</span>
+        <h4>RAG sobre normativa del sector</h4>
+        <p>749 cláusulas indexadas en cuatro corpus vectoriales —manual de acometidas MN-COM-AC-001, reglamento comercial, regulación ARCONEL y tablas NEC 2023—. El agente cita la cláusula exacta, con página y sección, en vez de decir «según el manual». Es lo que sostiene un reclamo técnico ante CNEL.</p>
+        <span class="pill">RAG + Embeddings</span>
+      </article>
+
+      <article class="card reveal">
+        <span class="ico">🖥️</span>
+        <h4>LLM local en la tablet</h4>
+        <p>Modelo de lenguaje corriendo dentro del propio dispositivo con llama.cpp, expuesto por una API compatible con OpenAI. Responde sin internet y sin costo por token: la nube queda para lo complejo, lo repetitivo se resuelve en local.</p>
+        <span class="pill">llama.cpp · local</span>
       </article>
 
       <article class="card reveal">
@@ -325,7 +346,7 @@
       <div class="demo reveal">
         <div class="demo-bar">
           <span class="dots" aria-hidden="true"><i></i><i></i><i></i></span>
-          <span class="url">gestion_medidores.db · 18 tablas</span>
+          <span class="url">gestion_medidores.db · 19 tablas</span>
         </div>
         <div class="demo-body">
           <div style="font-size:clamp(.7rem,1.8vw,.78rem);color:var(--txt-3);margin-bottom:.5rem">
@@ -552,25 +573,26 @@
     <!-- ---------- ESTADO POR SERVICIO ---------- -->
     <div class="sec-head reveal" style="margin-top:2.5rem;margin-bottom:1rem">
       <h3>Estado leído del supervisor</h3>
-      <p style="font-size:.84rem">Salida real de <code>sv status</code>. Los cinco servicios en rojo están retirados a propósito desde la consolidación de septiembre.</p>
+      <p style="font-size:.84rem">Salida real de <code>sv status</code>, leída del supervisor. Los 17 servicios están en <code>run</code>: los cinco bots heredados siguen supervisados, aunque sin tráfico de producción.</p>
     </div>
     <div class="svc-grid reveal">
-      <div class="svc-item"><span class="dot run"></span><span class="nm">salchipapabot</span><span class="p">pid 2951</span></div>
-      <div class="svc-item"><span class="dot run"></span><span class="nm">hermes</span><span class="p">pid 16039</span></div>
-      <div class="svc-item"><span class="dot run"></span><span class="nm">hermes_medicina</span><span class="p">pid 21436</span></div>
-      <div class="svc-item"><span class="dot run"></span><span class="nm">hermes_nutricion</span><span class="p">pid 21437</span></div>
-      <div class="svc-item"><span class="dot run"></span><span class="nm">servidor_web</span><span class="p">pid 6167</span></div>
-      <div class="svc-item"><span class="dot run"></span><span class="nm">servidor_energia</span><span class="p">pid 5486</span></div>
-      <div class="svc-item"><span class="dot run"></span><span class="nm">guardian</span><span class="p">pid 16182</span></div>
-      <div class="svc-item"><span class="dot run"></span><span class="nm">vigia_gateways</span><span class="p">pid 16757</span></div>
-      <div class="svc-item"><span class="dot run"></span><span class="nm">cloudflared</span><span class="p">pid 7529</span></div>
-      <div class="svc-item"><span class="dot run"></span><span class="nm">crond</span><span class="p">pid 3984</span></div>
-      <div class="svc-item"><span class="dot run"></span><span class="nm">sshd_custom</span><span class="p">pid 20255</span></div>
-      <div class="svc-item"><span class="dot down"></span><span class="nm">burgerbot</span><span class="p">retirado</span></div>
-      <div class="svc-item"><span class="dot down"></span><span class="nm">papafritabot</span><span class="p">retirado</span></div>
-      <div class="svc-item"><span class="dot down"></span><span class="nm">papipollobot</span><span class="p">retirado</span></div>
-      <div class="svc-item"><span class="dot down"></span><span class="nm">tacobot</span><span class="p">retirado</span></div>
-      <div class="svc-item"><span class="dot down"></span><span class="nm">llama-server</span><span class="p">retirado</span></div>
+      <div class="svc-item"><span class="dot run"></span><span class="nm">salchipapabot</span><span class="p">pid 10339</span></div>
+      <div class="svc-item"><span class="dot run"></span><span class="nm">hermes</span><span class="p">pid 14596</span></div>
+      <div class="svc-item"><span class="dot run"></span><span class="nm">hermes_medicina</span><span class="p">pid 7495</span></div>
+      <div class="svc-item"><span class="dot run"></span><span class="nm">hermes_nutricion</span><span class="p">pid 7515</span></div>
+<div class="svc-item"><span class="dot run"></span><span class="nm">hermes_contabilidad</span><span class="p">pid 7220</span></div>
+      <div class="svc-item"><span class="dot run"></span><span class="nm">servidor_web</span><span class="p">pid 16877</span></div>
+      <div class="svc-item"><span class="dot run"></span><span class="nm">servidor_energia</span><span class="p">pid 23359</span></div>
+      <div class="svc-item"><span class="dot run"></span><span class="nm">guardian</span><span class="p">pid 16801</span></div>
+      <div class="svc-item"><span class="dot run"></span><span class="nm">vigia_gateways</span><span class="p">pid 17518</span></div>
+      <div class="svc-item"><span class="dot run"></span><span class="nm">cloudflared</span><span class="p">pid 7465</span></div>
+      <div class="svc-item"><span class="dot run"></span><span class="nm">crond</span><span class="p">pid 7490</span></div>
+      <div class="svc-item"><span class="dot run"></span><span class="nm">sshd_custom</span><span class="p">pid 7474</span></div>
+      <div class="svc-item"><span class="dot run"></span><span class="nm">burgerbot</span><span class="p">pid 8748</span></div>
+      <div class="svc-item"><span class="dot run"></span><span class="nm">papafritabot</span><span class="p">pid 8703</span></div>
+      <div class="svc-item"><span class="dot run"></span><span class="nm">papipollobot</span><span class="p">pid 8752</span></div>
+      <div class="svc-item"><span class="dot run"></span><span class="nm">tacobot</span><span class="p">pid 23158</span></div>
+      <div class="svc-item"><span class="dot run"></span><span class="nm">llama-server</span><span class="p">pid 22649</span></div>
     </div>
   </div>
 </section>
@@ -587,7 +609,7 @@
     <div class="db-wrap reveal">
       <div class="db-head">
         <span class="nm">gestion_medidores.db</span>
-        <span class="meta">351 MB · 18 tablas operativas · conteo de hoy</span>
+        <span class="meta">385 MB · 19 tablas operativas · conteo de hoy</span>
       </div>
       <table class="db-tbl">
         <thead>
@@ -623,7 +645,7 @@
 
     <div class="note reveal">
       <span class="i">📌</span>
-      <p><b>Nota de honestidad:</b> la tabla tiene 19 entradas en el esquema, pero <code>sqlite_sequence</code> es interna de SQLite y no cuenta como tabla de datos. Por eso aquí se reportan <b>18 tablas operativas</b>, no 19 ni 11.</p>
+      <p><b>Nota de honestidad:</b> la tabla tiene 20 entradas en el esquema, pero <code>sqlite_sequence</code> es interna de SQLite y no cuenta como tabla de datos. Por eso aquí se reportan <b>19 tablas operativas</b>, no 20.</p>
     </div>
 
     <div class="metrics reveal" style="margin-top:1.5rem">
@@ -695,7 +717,7 @@
       </div>
       <div class="tl-item new reveal">
         <span class="d">Hoy</span>
-        <h4>🔥 672 K registros · 11 servicios · 3 portales</h4>
+        <h4>🔥 754 K registros · 17 servicios · 3 portales</h4>
         <p>Todo corriendo 24/7 desde una tablet OUKITEL RT2 en Guayaquil, Ecuador. Sin servidores externos ni costos mensuales de infraestructura.</p>
         <span class="tg2">Hecho en Ecuador 🇪🇨</span>
       </div>
